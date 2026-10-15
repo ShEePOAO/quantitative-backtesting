@@ -190,6 +190,8 @@
     "起點 = 100": "Start = 100",
     "等權買入持有": "Equal-weight buy & hold",
     "買入持有": "Buy & hold",
+    "買入": "Buy",
+    "賣出": "Sell",
     "組合權益": "Portfolio",
     "策略權益": "Strategy",
     "直接停損": "Direct stop",
