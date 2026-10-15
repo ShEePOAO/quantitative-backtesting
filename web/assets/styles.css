@@ -135,7 +135,7 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
 .mast-fx { position: absolute; inset: 0; opacity: .45; pointer-events: none; }
 .masthead > .brand, .masthead > .runwrap { position: relative; z-index: 1; }
 .mast-fx canvas, .empty-fx canvas { display: block; width: 100% !important; height: 100% !important; }
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .mark { width: 30px; height: 30px; color: var(--accent); flex: none; }
 .brandtext { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
 .wordmark { font-family: var(--mono); font-weight: 600; font-size: 18px; letter-spacing: -.02em; }
