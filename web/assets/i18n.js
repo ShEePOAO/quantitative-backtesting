@@ -291,7 +291,6 @@
     "多空（反手）引擎不支援止損/止盈，已忽略這兩個設定。": "The long/short engine does not support SL/TP; both were ignored.",
     "送入「網格鎖倉引擎」（自動加單 / 鎖倉 / 解鎖）": "Send to grid-hedge engine (auto add / hedge / unlock)",
     "已送入網格鎖倉引擎：結果含加單 / 鎖倉 / 解鎖與資金費率。": "Sent to grid-hedge engine: results include add-ons / hedges / unlocks and funding.",
-    "未來函數檢查通過：截斷重算與全樣本一致。": "Look-ahead check passed: truncated recompute matches the full sample.",
     "未來函數檢查無法完成（策略無法在截斷資料上重算）。": "Look-ahead check could not complete (strategy can't recompute on truncated data).",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };

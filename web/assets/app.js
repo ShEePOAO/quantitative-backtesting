@@ -681,11 +681,10 @@ function renderNotices(r) {
   box.innerHTML = "";
   const items = [];
   const la = r.lookahead;
-  if (la.status === "pass") items.push(["ok", "未來函數檢查通過：截斷重算與全樣本一致。"]);
-  else if (la.status === "fail") {
+  if (la.status === "fail") {
     const ex = la.bad.slice(0, 3).map((b) => `${b[0]}（全=${b[1]}, 截=${b[2]}）`).join("；");
     items.push(["err", `偵測到未來函數（look-ahead），共 ${la.bad.length} 處不一致。範例：${ex}。常見原因：shift(-n)、rolling(center=True)、整段 mean/std/z-score。`]);
-  } else items.push(["info", "未來函數檢查無法完成（策略無法在截斷資料上重算）。"]);
+  } else if (la.status !== "pass") items.push(["info", "未來函數檢查無法完成（策略無法在截斷資料上重算）。"]);
   if (r.metrics.liquidated) items.push(["err", "爆倉：槓桿下權益歸零，回測於該點停止。請降低槓桿或倉位。"]);
   if (r.engine && r.engine.includes("多空") && $("#use-sltp").checked) items.push(["warn", "多空（反手）引擎不支援止損/止盈，已忽略這兩個設定。"]);
   if (r.engine && r.engine.includes("網格鎖倉")) items.push(["info", "已送入網格鎖倉引擎：結果含加單 / 鎖倉 / 解鎖與資金費率。"]);
