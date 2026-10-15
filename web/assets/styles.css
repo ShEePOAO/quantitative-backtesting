@@ -396,6 +396,8 @@ textarea#code:focus { outline: none; }
 .empty p { font-size: 13.5px; line-height: 1.6; margin: 8px 0; }
 .empty code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 .empty-note { color: var(--ink-3); font-size: 12.5px; }
+.empty-manual { margin-top: 8px; font-family: var(--font); font-size: 12.5px; color: var(--ink-3); background: none; border: 0; border-bottom: 1px dashed color-mix(in srgb, var(--ink-3) 55%, transparent); padding: 0 1px 1px; cursor: pointer; transition: color .2s ease, border-color .2s ease; }
+.empty-manual:hover { color: var(--accent); border-color: var(--accent); }
 
 .notice { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; border: 1px solid; }
 .notice[data-kind="ok"] { background: #E6EFE4; border-color: #BCD6B6; color: #2E5B3C; }

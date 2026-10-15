@@ -290,6 +290,7 @@ function bindEvents() {
   $("#unpin-btn").addEventListener("click", clearPins);
   $("#manual-download").addEventListener("click", downloadManual);
   $("#manual-btn").addEventListener("click", () => setView("manual"));
+  $("#empty-manual").addEventListener("click", () => setView("manual"));
   $("#opt-run").addEventListener("click", optRun);
   $("#rolling-win").addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;

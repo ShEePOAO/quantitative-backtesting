@@ -300,6 +300,7 @@
     "移動停損": "Trailing stop", "ATR 停損": "ATR stop", "最長持倉": "Max hold", "回撤停損": "Drawdown stop",
     "目標槓桿": "Target leverage", "風險平價": "Risk parity",
     "放大編輯": "Expand editor", "編輯策略程式碼": "Edit strategy code", "關閉": "Close",
+    "看使用手冊": "View the manual",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };
 
