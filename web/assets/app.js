@@ -6,7 +6,7 @@ const T = (s) => (window.QS_I18N ? QS_I18N.t(s) : s);
 const PERCENT = new Set(["total_return", "cagr", "max_drawdown", "win_rate", "exposure", "buy_hold_return", "excess_return"]);
 const MONEY = new Set(["avg_trade", "avg_win", "avg_loss", "best_trade", "worst_trade"]);
 const METRIC_LABELS = {
-  total_return: "總收益率", cagr: "年化 (CAGR)", max_drawdown: "最大回撤", sharpe: "夏普比率",
+  total_return: "總收益率", cagr: "年化", max_drawdown: "最大回撤", sharpe: "夏普比率",
   sortino: "索提諾比率", calmar: "卡瑪比率", n_trades: "交易次數", win_rate: "勝率",
   profit_factor: "盈虧比", avg_trade: "平均每筆", avg_win: "平均盈利", avg_loss: "平均虧損",
   best_trade: "最佳交易", worst_trade: "最差交易", exposure: "持倉比例",
@@ -792,7 +792,8 @@ function renderReadout(m) {
     kEl.textContent = METRIC_LABELS[key];
     if (METRIC_TIPS[key]) { kEl.dataset.tip = METRIC_TIPS[key]; kEl.tabIndex = 0; }
     const vEl = el("div", { class: "v " + tone(key, m[key]) });
-    const cell = el("div", { class: "cell" }, [kEl, vEl]);
+    const note = el("div", { class: "note" }, [kEl, vEl]);
+    const cell = el("div", { class: "cell" }, [note]);
     wrap.appendChild(cell);
     cell.style.setProperty("--i", wrap.childElementCount - 1);
     countUp(vEl, key, m[key]);

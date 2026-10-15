@@ -228,6 +228,13 @@
     "最差交易": "Worst trade",
     "持倉比例": "Exposure",
     "超額報酬": "Excess return",
+    "期末權益 ÷ 期初 − 1": "Ending equity ÷ start − 1",
+    "幾何年化報酬": "Geometric annualized return",
+    "報酬 ÷ 波動（越高越好）": "Return ÷ volatility (higher is better)",
+    "年化報酬 ÷ 最大回撤": "Annualized return ÷ max drawdown",
+    "由高點回落的最大幅度": "Largest peak-to-trough decline",
+    "獲利交易 ÷ 總交易數": "Winning trades ÷ total trades",
+    "已平倉交易筆數": "Number of closed trades",
     "進場時間": "Entry time",
     "進場價": "Entry",
     "出場時間": "Exit time",
@@ -382,7 +389,7 @@
       if (node.nodeValue !== next) node.nodeValue = next;
     } else if (node.nodeType === 1) {
       if (node.closest && node.closest(SKIP)) return;
-      ["placeholder", "title", "aria-label"].forEach((a) => {
+      ["placeholder", "title", "aria-label", "data-tip"].forEach((a) => {
         if (node.hasAttribute(a)) {
           node.__i18n = node.__i18n || {};
           if (node.__i18n[a] === undefined) node.__i18n[a] = node.getAttribute(a);
@@ -404,7 +411,7 @@
         else walk(m.target);
       });
     });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "title", "aria-label"] });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "title", "aria-label", "data-tip"] });
   }
 
   function setLang(lang) {
