@@ -292,6 +292,10 @@
     "送入「網格鎖倉引擎」（自動加單 / 鎖倉 / 解鎖）": "Send to grid-hedge engine (auto add / hedge / unlock)",
     "已送入網格鎖倉引擎：結果含加單 / 鎖倉 / 解鎖與資金費率。": "Sent to grid-hedge engine: results include add-ons / hedges / unlocks and funding.",
     "未來函數檢查無法完成（策略無法在截斷資料上重算）。": "Look-ahead check could not complete (strategy can't recompute on truncated data).",
+    "資料自": "Data starts", "起，比你選的起始日": "— later than your start date",
+    "晚——更早的區間沒有資料（例如免費小時資料約只有 2 年）。": " — earlier periods have no data (e.g. free hourly data covers only ~2 years).",
+    "資料只到": "Data ends", "，比你選的結束日": ", earlier than your end date", "早。": ".",
+    "只有": "Only", "根 K 線，樣本偏少，回測結果參考性低。": "bars — the sample is small, so results are unreliable.",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };
 

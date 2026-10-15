@@ -460,6 +460,24 @@ def _fees_series(df, trades):
     return fees.cumsum()
 
 
+def _data_quality(df, interval, start, end):
+    tol_days = {"1w": 30, "1d": 10, "12h": 5, "6h": 5, "4h": 5, "1h": 3, "30m": 2, "15m": 2, "5m": 1}.get(interval, 5)
+    tol = pd.Timedelta(days=tol_days)
+    a0, a1 = df.index[0], df.index[-1]
+    warns = []
+    if start:
+        rs = pd.Timestamp(start)
+        if a0 - rs > tol:
+            warns.append({"kind": "start_late", "requested": str(rs.date()), "actual": str(a0.date())})
+    if end:
+        re_ = pd.Timestamp(end)
+        if re_ - a1 > tol:
+            warns.append({"kind": "end_early", "requested": str(re_.date()), "actual": str(a1.date())})
+    if len(df) < 50:
+        warns.append({"kind": "few_bars", "n": int(len(df))})
+    return {"start": str(a0.date()), "end": str(a1.date()), "bars": int(len(df)), "warnings": warns}
+
+
 def run_single(ns, params, symbol, interval, start, end, refresh, source, settings, use_hedge):
     ppy = PERIODS_PER_YEAR[interval]
     df = load_df(symbol, interval, start, end, refresh, source)
@@ -476,6 +494,7 @@ def run_single(ns, params, symbol, interval, start, end, refresh, source, settin
         "engine": "網格鎖倉" if is_hedge else ("多空" if is_ls else "做多"),
         "nonzero_signals": int((sig != 0).sum()),
         "lookahead": {"status": la_status, "bad": la_bad},
+        "data": _data_quality(df, interval, start, end),
         "metrics": _metrics_payload(res.metrics),
         "equity": series_payload(res.equity),
         "price": _price_payload(df),
@@ -510,7 +529,7 @@ def run_single(ns, params, symbol, interval, start, end, refresh, source, settin
     return payload
 
 
-def _multi_response(port, symbols, interval, ns, params, first_df):
+def _multi_response(port, symbols, interval, ns, params, first_df, start=None, end=None):
     try:
         la_status, la_bad = lookahead_check(ns, first_df, params)
     except Exception:
@@ -525,6 +544,7 @@ def _multi_response(port, symbols, interval, ns, params, first_df):
         "interval": interval,
         "engine": " / ".join(sorted(port["engines"])),
         "lookahead": {"status": la_status, "bad": la_bad},
+        "data": _data_quality(first_df, interval, start, end),
         "metrics": _metrics_payload(port["metrics"]),
         "equity": series_payload(port["portfolio_equity"]),
         "buy_hold": series_payload(port["portfolio_bh"]),
@@ -590,7 +610,7 @@ def run_request_stream(req):
         yield {"type": "progress", "done": n, "total": n, "label": "組合"}
         port = _combine_portfolio(curves, bh_curves, per_asset, trades_all, exposures, engines, caps, total, n, ppy)
         port["weights"] = w
-        yield {"type": "result", "result": _multi_response(port, symbols, interval, ns, params, first_df)}
+        yield {"type": "result", "result": _multi_response(port, symbols, interval, ns, params, first_df, start, end)}
         return
 
     symbol = req.get("symbol", "BTC")

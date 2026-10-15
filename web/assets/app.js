@@ -685,6 +685,14 @@ function renderNotices(r) {
     const ex = la.bad.slice(0, 3).map((b) => `${b[0]}（全=${b[1]}, 截=${b[2]}）`).join("；");
     items.push(["err", `偵測到未來函數（look-ahead），共 ${la.bad.length} 處不一致。範例：${ex}。常見原因：shift(-n)、rolling(center=True)、整段 mean/std/z-score。`]);
   } else if (la.status !== "pass") items.push(["info", "未來函數檢查無法完成（策略無法在截斷資料上重算）。"]);
+  const dq = r.data;
+  if (dq && dq.warnings && dq.warnings.length) {
+    for (const w of dq.warnings) {
+      if (w.kind === "start_late") items.push(["warn", `${T("資料自")} ${w.actual} ${T("起，比你選的起始日")} ${w.requested} ${T("晚——更早的區間沒有資料（例如免費小時資料約只有 2 年）。")}`]);
+      else if (w.kind === "end_early") items.push(["warn", `${T("資料只到")} ${w.actual} ${T("，比你選的結束日")} ${w.requested} ${T("早。")}`]);
+      else if (w.kind === "few_bars") items.push(["warn", `${T("只有")} ${w.n} ${T("根 K 線，樣本偏少，回測結果參考性低。")}`]);
+    }
+  }
   if (r.metrics.liquidated) items.push(["err", "爆倉：槓桿下權益歸零，回測於該點停止。請降低槓桿或倉位。"]);
   if (r.engine && r.engine.includes("多空") && $("#use-sltp").checked) items.push(["warn", "多空（反手）引擎不支援止損/止盈，已忽略這兩個設定。"]);
   if (r.engine && r.engine.includes("網格鎖倉")) items.push(["info", "已送入網格鎖倉引擎：結果含加單 / 鎖倉 / 解鎖與資金費率。"]);
