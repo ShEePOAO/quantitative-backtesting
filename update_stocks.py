@@ -27,6 +27,7 @@ import yfinance as yf
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMPORT_DIR = os.environ.get("QUANT_IMPORT_DIR", r"C:\crypto-backtester\data\import_csv")
 CACHE_DIR = os.path.join(BASE_DIR, "data", "cache")
+BUNDLED_DIR = os.path.join(BASE_DIR, "data", "import_csv")
 
 # KEY -> (yahoo ticker, 顯示名稱)
 STOCKS = {
@@ -123,12 +124,13 @@ def write_csv(df, path, interval):
 
 def clear_cache(key):
     removed = 0
-    for p in glob.glob(os.path.join(CACHE_DIR, f"{key}_*_import.csv")):
-        try:
-            os.remove(p)
-            removed += 1
-        except OSError:
-            pass
+    for cd in {CACHE_DIR, os.path.join(os.path.dirname(IMPORT_DIR), "cache")}:
+        for p in glob.glob(os.path.join(cd, f"{key}_*_import.csv")):
+            try:
+                os.remove(p)
+                removed += 1
+            except OSError:
+                pass
     return removed
 
 
@@ -150,8 +152,12 @@ def main():
         log(f"未知代號 {unknown}，可用：{list(STOCKS.keys())}")
         sys.exit(1)
 
-    os.makedirs(IMPORT_DIR, exist_ok=True)
-    log(f"IMPORT_DIR = {IMPORT_DIR}")
+    dirs = [IMPORT_DIR]
+    if os.path.abspath(BUNDLED_DIR) != os.path.abspath(IMPORT_DIR):
+        dirs.append(BUNDLED_DIR)
+    for d in dirs:
+        os.makedirs(d, exist_ok=True)
+    log(f"IMPORT_DIRS = {dirs}")
     for key in keys:
         ticker = STOCKS[key][0]
         for interval, period, suffix in JOBS:
@@ -160,8 +166,8 @@ def main():
                 if df is None or df.empty:
                     log(f"{key:6s} ({ticker:9s}) {interval:>3s} -> 無資料")
                     continue
-                path = os.path.join(IMPORT_DIR, f"{key}{suffix}.csv")
-                write_csv(df, path, interval)
+                for d in dirs:
+                    write_csv(df, os.path.join(d, f"{key}{suffix}.csv"), interval)
                 log(f"{key:6s} ({ticker:9s}) {interval:>3s} -> {len(df):>6d} rows  {df.index[0]} .. {df.index[-1]}")
             except Exception as e:  # noqa: BLE001
                 log(f"{key:6s} ({ticker:9s}) {interval:>3s} FAILED: {e!r}")
