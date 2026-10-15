@@ -216,7 +216,6 @@ function bindEvents() {
   });
   $("#run-btn").addEventListener("click", run);
   $("#use-sltp").addEventListener("change", () => { $("#sltp-row").hidden = !$("#use-sltp").checked; });
-  $("#use-vt").addEventListener("change", () => { $("#vt-row").hidden = !$("#use-vt").checked; });
   $("#pm_mode").addEventListener("change", () => { $("#pm-fields").hidden = $("#pm_mode").value === "fixed"; });
   $("#load-btn").addEventListener("click", loadStrategy);
   $("#save-btn").addEventListener("click", saveStrategy);
@@ -377,7 +376,9 @@ async function parseParams() {
     const data = await api("/api/params", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
     if (seq !== parseSeq) return;
     markEditorValid();
+    state.flags = data.flags || {};
     renderParams(data.param_defs || {});
+    renderStrategyFlags(state.flags);
   } catch (e) {
     if (seq !== parseSeq) return;
     $(".editor-wrap").classList.add("invalid");
@@ -385,6 +386,16 @@ async function parseParams() {
     box.hidden = false;
     box.textContent = e.message;
   }
+}
+function renderStrategyFlags(f) {
+  const box = $("#strategy-flags");
+  if (!box) return;
+  const parts = [];
+  if (f && f.use_vol_target) parts.push(`${T("波動目標")} ${Math.round((f.vol_target || 0) * 100)}%`);
+  if (f && f.use_hedge) parts.push(T("網格鎖倉引擎"));
+  if (!parts.length) { box.hidden = true; box.textContent = ""; return; }
+  box.hidden = false;
+  box.textContent = `${T("策略宣告")}：${parts.join(" · ")}`;
 }
 function renderParams(defs) {
   const wrap = $("#params");
@@ -516,7 +527,7 @@ function settingsPayload() {
     slippage: Number($("#slippage").value),
     position_pct: Number($("#position_pct").value),
     leverage: Number($("#leverage").value),
-    vol_target: $("#use-vt").checked ? Number($("#vt_target").value) / 100 : null,
+    vol_target: (state.flags && state.flags.use_vol_target) ? state.flags.vol_target : null,
     stop_loss_pct: useSltp ? Number($("#stop_loss").value) / 100 : null,
     take_profit_pct: useSltp ? Number($("#take_profit").value) / 100 : null,
     risk_mgmt: null,
@@ -547,7 +558,7 @@ async function run() {
     start: dates.start, end: dates.end,
     source: $("#source").value,
     refresh: $("#refresh").checked,
-    use_hedge: $("#use_hedge").checked,
+    use_hedge: !!(state.flags && state.flags.use_hedge),
   };
   if (state.mode === "single") {
     payload.symbol = $("#symbol").value;
@@ -979,8 +990,8 @@ function updateSubnavInd() {
 }
 
 const MIX_IDS = new Set(["position_pct", "leverage", "stop_loss", "take_profit", "fee_rate", "slippage",
-  "vt_target", "pm_up", "pm_down", "pm_cap", "pm_floor", "pm_lookback", "pm_decay", "pm_min_pos", "pm_max_pos"]);
-const UNITS = { capital: "USDT", position_pct: "×", leverage: "×", vt_target: "%", stop_loss: "%", take_profit: "%",
+  "pm_up", "pm_down", "pm_cap", "pm_floor", "pm_lookback", "pm_decay", "pm_min_pos", "pm_max_pos"]);
+const UNITS = { capital: "USDT", position_pct: "×", leverage: "×", stop_loss: "%", take_profit: "%",
   pm_up: "×", pm_down: "×", pm_cap: "×", pm_floor: "×", pm_min_pos: "×", pm_max_pos: "×" };
 function decorateControls(root = document) {
   root.querySelectorAll("input[type=number]").forEach((inp) => {
@@ -1106,8 +1117,6 @@ function paletteCommands() {
     { label: "切換 · 多籌組合", run: () => setMode("multi") },
     { label: "檢視 · 回測結果", run: () => setView("report") },
     { label: "檢視 · 使用手冊", run: () => setView("manual") },
-    { label: "切換 · 波動目標", run: () => $("#use-vt").click() },
-    { label: "切換 · 網格鎖倉", run: () => $("#use_hedge").click() },
     { label: "複製程式碼", run: () => copyCode() },
     { label: "主題 · 冷灰", run: () => setTheme("slate") },
     { label: "主題 · 冷白", run: () => setTheme("paper") },
@@ -1348,7 +1357,7 @@ async function optRun() {
   const body = {
     code: codeGet(), params: collectParams(), settings: settingsPayload(),
     symbol: $("#symbol").value, interval: $("#interval").value, start: dates.start, end: dates.end,
-    source: $("#source").value, refresh: $("#refresh").checked, use_hedge: $("#use_hedge").checked,
+    source: $("#source").value, refresh: $("#refresh").checked, use_hedge: !!(state.flags && state.flags.use_hedge),
     grid, metric: $("#opt-metric").value, split: Number($("#opt-split").value) || 0,
   };
   const btn = $("#opt-run");

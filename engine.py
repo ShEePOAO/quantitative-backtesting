@@ -572,6 +572,17 @@ def _parse_request(req):
     return ns, params, settings
 
 
+def strategy_flags(ns):
+    vt = ns.get("USE_VOL_TARGET")
+    vol = ns.get("VOL_TARGET")
+    vol = float(vol) if isinstance(vol, (int, float)) else 0.6
+    return {
+        "use_vol_target": bool(vt),
+        "vol_target": (vol if vt else None),
+        "use_hedge": bool(ns.get("USE_HEDGE")),
+    }
+
+
 def run_request_stream(req):
     ns, params, settings = _parse_request(req)
     interval = req.get("interval", "1d")
@@ -581,6 +592,11 @@ def run_request_stream(req):
     refresh = bool(req.get("refresh", False))
     use_hedge = bool(req.get("use_hedge", False))
     ppy = PERIODS_PER_YEAR[interval]
+    flags = strategy_flags(ns)
+    if flags["use_vol_target"]:
+        settings["vol_target"] = flags["vol_target"]
+    if flags["use_hedge"]:
+        use_hedge = True
 
     if req.get("mode") == "multi":
         symbols = req.get("symbols") or []
@@ -645,6 +661,11 @@ def optimize_stream(req):
     split = float(req.get("split") or 0)
     if not grid:
         raise ValueError("請設定要掃描的參數範圍")
+    flags = strategy_flags(ns)
+    if flags["use_vol_target"]:
+        settings["vol_target"] = flags["vol_target"]
+    if flags["use_hedge"]:
+        use_hedge = True
 
     df = load_df(symbol, interval, start, end, refresh, source)
     if len(df) < 30:

@@ -78,6 +78,7 @@ def params(body: CodeBody):
         return {
             "ok": True,
             "param_defs": engine.param_defs(ns) or {},
+            "flags": engine.strategy_flags(ns),
             "has_generate": callable(ns.get("generate")),
         }
     except SyntaxError as e:

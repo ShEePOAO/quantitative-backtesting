@@ -178,6 +178,7 @@
         <div id="editor-error" class="inline-error" hidden></div>
         <textarea id="code" spellcheck="false" translate="no" aria-label="策略程式碼"></textarea>
       </div>
+      <p class="hint flags" id="strategy-flags" hidden></p>
       <div class="editor-foot">
         <span class="hint">可用 pd、np 與數十種技術指標。用到哪個指標，它的調參欄位會自動出現。df 欄位 open/high/low/close/volume。</span>
         <div class="save">
@@ -205,15 +206,6 @@
       </div>
       <div class="field-row">
         <label class="field"><span class="field-label">槓桿</span><input name="leverage" autocomplete="off" id="leverage" type="number" value="1" min="1" max="50" step="1"></label>
-      </div>
-
-      <label class="check">
-        <span class="switch-text">啟用波動目標（抗震盪）</span>
-        <span class="switch"><input name="use_vt" autocomplete="off" id="use-vt" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
-      </label>
-      <div id="vt-row" hidden>
-        <label class="field"><span class="field-label">目標年化波動 (%)</span><input name="vt_target" autocomplete="off" id="vt_target" type="number" value="60" min="10" max="200" step="5"></label>
-        <p class="hint" style="max-width:100%">波動目標：倉位 = 基礎倉位 × clip(目標波動 ÷ 平滑後已實現波動, 0.2, 2.0)。高波動自動縮倉、低波動加倉——不砍任何交易，是「倉位公式」不是「濾網」。</p>
       </div>
 
       <label class="check">
@@ -254,11 +246,6 @@
           </div>
         </div>
       </details>
-
-      <label class="check">
-        <span class="switch-text">送入「網格鎖倉引擎」（自動加單 / 鎖倉 / 解鎖）</span>
-        <span class="switch"><input name="use_hedge" autocomplete="off" id="use_hedge" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
-      </label>
     </section>
 
   </aside>
