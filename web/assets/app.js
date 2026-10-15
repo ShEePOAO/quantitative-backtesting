@@ -139,13 +139,7 @@ async function init() {
 }
 
 function initGalaxyFx() {
-  if (window.Galaxy && typeof window.Galaxy.create === "function") {
-    try {
-      window.Galaxy.create("gradient", "#mast-fx", {
-        speed: 0.5, colors: ["#D6DBDF", "#BEC5CB", "#EFF2F4", "#C9CFD5"],
-      });
-    } catch (e) { /* optional */ }
-  }
+  /* masthead 漸變改用純 CSS（見 .mast-fx）。GalaxyJS 會因系統開啟 prefers-reduced-motion 而不渲染，故不使用。 */
 }
 function dismissEmptyFx() { /* no-op */ }
 

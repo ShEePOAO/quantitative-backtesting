@@ -132,7 +132,8 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
   border-bottom: 1px solid var(--line);
   overflow: visible;
 }
-.mast-fx { position: absolute; inset: 0; opacity: .5; pointer-events: none; }
+.mast-fx { position: absolute; inset: 0; opacity: .55; pointer-events: none; background: linear-gradient(110deg, #D6DBDF 0%, #BEC5CB 26%, #EFF2F4 50%, #C9CFD5 74%, #D6DBDF 100%); background-size: 320% 100%; animation: mastgrad 14s ease-in-out infinite; }
+@keyframes mastgrad { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .masthead > .brand, .masthead > .runwrap { position: relative; z-index: 1; }
 .mast-fx canvas, .empty-fx canvas { display: block; width: 100% !important; height: 100% !important; }
 .brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
