@@ -291,6 +291,7 @@ function bindEvents() {
   $("#manual-download").addEventListener("click", downloadManual);
   $("#manual-btn").addEventListener("click", () => setView("manual"));
   $("#empty-manual").addEventListener("click", () => setView("manual"));
+  $("#update-btn").addEventListener("click", checkUpdate);
   $("#opt-run").addEventListener("click", optRun);
   $("#rolling-win").addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
@@ -1277,6 +1278,20 @@ function clearPins() {
   state.pins = [];
   showToast("已清除釘選", "ok");
   if (state.lastResult) render(state.lastResult);
+}
+async function checkUpdate() {
+  const btn = $("#update-btn");
+  btn.disabled = true; btn.classList.add("busy");
+  try {
+    const data = await api("/api/update", { method: "POST" });
+    if (!data.ok) showToast(data.error || "更新失敗", "err");
+    else if (data.updated) { showToast("已更新到最新版！請關閉並重新啟動伺服器（python server.py）", "ok"); }
+    else showToast("已經是最新版", "ok");
+  } catch (e) {
+    showToast(e.message || "更新失敗", "err");
+  } finally {
+    btn.disabled = false; btn.classList.remove("busy");
+  }
 }
 function initGithubStar() {
   const a = $("#gh-star");

@@ -302,6 +302,9 @@
     "目標槓桿": "Target leverage", "風險平價": "Risk parity",
     "放大編輯": "Expand editor", "編輯策略程式碼": "Edit strategy code", "關閉": "Close",
     "看使用手冊": "View the manual",
+    "檢查更新": "Check for updates",
+    "已經是最新版": "Already up to date",
+    "已更新到最新版！請關閉並重新啟動伺服器（python server.py）": "Updated to the latest version! Close and restart the server (python server.py).",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };
 

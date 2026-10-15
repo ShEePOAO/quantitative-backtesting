@@ -57,6 +57,8 @@ python server.py
 
 On Windows you can also double-click `start.bat`.
 
+> **Get the code with `git clone`** (not a ZIP download) — then the start screen has a **Check for updates** button that pulls the latest version from GitHub in one click.
+
 ### Data
 
 - A small set of **daily historical data** is bundled in `data/cache/`: BTC, ETH, SOL, XRP, BNB (plus 12h for BTC/SOL) and NVDA, GOOGL, COIN. Clone it and run with **Local CSV + Daily** to try it right away.
@@ -121,6 +123,8 @@ python server.py
 ```
 
 Windows 也可直接雙擊 `start.bat`。
+
+> 建議用 **`git clone`** 下載（而非 ZIP）；這樣初始畫面就會有 **「檢查更新」** 按鈕，一鍵把專案更新到 GitHub 最新版。
 
 ### 資料
 

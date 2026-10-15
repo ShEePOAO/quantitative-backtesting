@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import traceback
 
 from fastapi import FastAPI
@@ -118,6 +119,28 @@ def optimize(body: OptBody):
 @app.get("/api/avail")
 def avail(symbol: str, source: str = "csv"):
     return {"symbol": symbol, "source": source, "intervals": engine.availability_payload(symbol, source)}
+
+
+@app.post("/api/update")
+def update():
+    if not os.path.isdir(os.path.join(APP_DIR, ".git")):
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": "此資料夾不是 git 專案（可能是 ZIP 下載），無法自動更新。建議改用 git clone 下載本專案。",
+        })
+    try:
+        br = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=APP_DIR,
+                            capture_output=True, text=True, timeout=15).stdout.strip() or "main"
+        r = subprocess.run(["git", "pull", "--ff-only", "origin", br], cwd=APP_DIR,
+                           capture_output=True, text=True, timeout=90)
+    except FileNotFoundError:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "找不到 git，請先安裝 git。"})
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"ok": False, "error": str(e) or e.__class__.__name__})
+    out = ((r.stdout or "") + (r.stderr or "")).strip()
+    ok = r.returncode == 0
+    low = out.lower()
+    already = ("already up to date" in low) or ("already up-to-date" in low) or ("已經是最新" in out) or ("已经是最新" in out)
+    return {"ok": ok, "updated": bool(ok and not already), "output": out[-1500:]}
 
 
 @app.get("/api/strategies")
