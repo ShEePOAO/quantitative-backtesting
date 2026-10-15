@@ -35,14 +35,8 @@ ASSETS = {
     "0050": {"binance": "0050.TW", "label": "元大台灣50"},
     "2317": {"binance": "2317.TW", "label": "鴻海"},
     "2454": {"binance": "2454.TW", "label": "聯發科"},
-    "2412": {"binance": "2412.TW", "label": "中華電信"},
     "2308": {"binance": "2308.TW", "label": "台達電"},
     "2303": {"binance": "2303.TW", "label": "聯電"},
-    "2881": {"binance": "2881.TW", "label": "富邦金"},
-    "1301": {"binance": "1301.TW", "label": "台塑"},
-    "2002": {"binance": "2002.TW", "label": "中鋼"},
-    "2603": {"binance": "2603.TW", "label": "長榮"},
-    "2884": {"binance": "2884.TW", "label": "玉山金"},
     # --- 常見美股 ---
     "AAPL": {"binance": "AAPL", "label": "Apple"},
     "AMZN": {"binance": "AMZN", "label": "Amazon"},
@@ -50,18 +44,13 @@ ASSETS = {
     "AMD": {"binance": "AMD", "label": "AMD"},
     "TSM": {"binance": "TSM", "label": "TSMC ADR"},
     "AVGO": {"binance": "AVGO", "label": "Broadcom"},
-    "NFLX": {"binance": "NFLX", "label": "Netflix"},
-    "JPM": {"binance": "JPM", "label": "JPMorgan"},
-    "V": {"binance": "V", "label": "Visa"},
-    "WMT": {"binance": "WMT", "label": "Walmart"},
-    "DIS": {"binance": "DIS", "label": "Disney"},
 }
 
 # 股票資產（日線長歷史 + 1h 原始資料；可產生 1h/4h/6h/12h 與 1d/1w）
 STOCK_SYMBOLS = {"NBIS", "SIVE", "NVDA", "LITE", "AXTI", "AAOI", "IREN", "GOOGL", "MSFT", "META",
                  "COIN", "CRCL", "MSTR", "RIOT",
-                 "2330", "0050", "2317", "2454", "2412", "2308", "2303", "2881", "1301", "2002", "2603", "2884",
-                 "AAPL", "AMZN", "TSLA", "AMD", "TSM", "AVGO", "NFLX", "JPM", "V", "WMT", "DIS"}
+                 "2330", "0050", "2317", "2454", "2308", "2303",
+                 "AAPL", "AMZN", "TSLA", "AMD", "TSM", "AVGO"}
 STOCK_INTERVALS = ["1h", "4h", "6h", "12h", "1d", "1w"]
 
 INTERVALS = {
