@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Data cache (generated from source data)
+data/cache/
+data/import_csv/
+
+# Live trading state / logs
+live_state*.json
+live_state/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Secrets
+.env
+*.env
+.streamlit/secrets.toml
+
+# Private (not for public repo)
+user_strategies/*.py
+!user_strategies/.gitkeep
+docs/實盤交易計畫.md

@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F3F5F7">
+<meta name="color-scheme" content="light">
+<title>Quant Studio · 量化回測</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E3A5F'/%3E%3Cpath d='M6 23 L13 14 L18 18 L26 8' fill='none' stroke='%23F3F5F7' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.plot.ly" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css?v=2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+</head>
+<body>
+
+<a class="skip" href="#main">跳到主要內容</a>
+
+<header class="masthead">
+  <div id="mast-fx" class="mast-fx" aria-hidden="true"></div>
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M3 25 L11 14 L17 19 L29 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="29" cy="5" r="2.6" fill="currentColor"/>
+      <path d="M3 29 H29" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>
+    </svg>
+    <div class="brandtext">
+      <h1 class="wordmark" translate="no">Quant&nbsp;Studio</h1>
+      <span class="tagline">量化回測</span>
+    </div>
+    <button id="manual-btn" class="continue-application" type="button" aria-label="使用手冊">
+      <div>
+        <div class="pencil"></div>
+        <div class="folder">
+          <div class="top">
+            <svg viewBox="0 0 24 27">
+              <path d="M1,0 L23,0 C23.5522847,-1.01453063e-16 24,0.44771525 24,1 L24,8.17157288 C24,8.70200585 23.7892863,9.21071368 23.4142136,9.58578644 L20.5857864,12.4142136 C20.2107137,12.7892863 20,13.2979941 20,13.8284271 L20,26 C20,26.5522847 19.5522847,27 19,27 L1,27 C0.44771525,27 6.76353751e-17,26.5522847 0,26 L0,1 C-6.76353751e-17,0.44771525 0.44771525,1.01453063e-16 1,0 Z"></path>
+            </svg>
+          </div>
+          <div class="paper"></div>
+        </div>
+      </div>
+      使用手冊
+    </button>
+    <a id="gh-star" class="gh-star" href="#" target="_blank" rel="noopener noreferrer" aria-label="在 GitHub 上給這個專案一顆星">
+      <span class="gh-shine" aria-hidden="true"></span>
+      <svg class="gh-mark" viewBox="0 0 438.549 438.549" aria-hidden="true"><path d="M409.132 114.573c-19.608-33.596-46.205-60.194-79.798-79.8-33.598-19.607-70.277-29.408-110.063-29.408-39.781 0-76.472 9.804-110.063 29.408-33.596 19.605-60.192 46.204-79.8 79.8C9.803 148.168 0 184.854 0 224.63c0 47.78 13.94 90.745 41.827 128.906 27.884 38.164 63.906 64.572 108.063 79.227 5.14.954 8.945.283 11.419-1.996 2.475-2.282 3.711-5.14 3.711-8.562 0-.571-.049-5.708-.144-15.417a2549.81 2549.81 0 01-.144-25.406l-6.567 1.136c-4.187.767-9.469 1.092-15.846 1-6.374-.089-12.991-.757-19.842-1.999-6.854-1.231-13.229-4.086-19.13-8.559-5.898-4.473-10.085-10.328-12.56-17.556l-2.855-6.57c-1.903-4.374-4.899-9.233-8.992-14.559-4.093-5.331-8.232-8.945-12.419-10.848l-1.999-1.431c-1.332-.951-2.568-2.098-3.711-3.429-1.142-1.331-1.997-2.663-2.568-3.997-.572-1.335-.098-2.43 1.427-3.289 1.525-.859 4.281-1.276 8.28-1.276l5.708.853c3.807.763 8.516 3.042 14.133 6.851 5.614 3.806 10.229 8.754 13.846 14.842 4.38 7.806 9.657 13.754 15.846 17.847 6.184 4.093 12.419 6.136 18.699 6.136 6.28 0 11.704-.476 16.274-1.423 4.565-.952 8.848-2.383 12.847-4.285 1.713-12.758 6.377-22.559 13.988-29.41-10.848-1.14-20.601-2.857-29.264-5.14-8.658-2.286-17.605-5.996-26.835-11.14-9.235-5.137-16.896-11.516-22.985-19.126-6.09-7.614-11.088-17.61-14.987-29.979-3.901-12.374-5.852-26.648-5.852-42.826 0-23.035 7.52-42.637 22.557-58.817-7.044-17.318-6.379-36.732 1.997-58.24 5.52-1.715 13.706-.428 24.554 3.853 10.85 4.283 18.794 7.952 23.84 10.994 5.046 3.041 9.089 5.618 12.135 7.708 17.705-4.947 35.976-7.421 54.818-7.421s37.117 2.474 54.823 7.421l10.849-6.849c7.419-4.57 16.18-8.758 26.262-12.565 10.088-3.805 17.802-4.853 23.134-3.138 8.562 21.509 9.325 40.922 2.279 58.24 15.036 16.18 22.559 35.787 22.559 58.817 0 16.178-1.958 30.497-5.853 42.966-3.9 12.471-8.941 22.457-15.125 29.979-6.191 7.521-13.901 13.85-23.131 18.986-9.232 5.14-18.182 8.85-26.84 11.136-8.662 2.286-18.415 4.004-29.263 5.146 9.894 8.562 14.842 22.077 14.842 40.539v60.237c0 3.422 1.19 6.279 3.572 8.562 2.379 2.279 6.136 2.95 11.276 1.995 44.163-14.653 80.185-41.062 108.068-79.226 27.88-38.161 41.825-81.126 41.825-128.906-.01-39.771-9.818-76.454-29.414-110.049z"/></svg>
+      <span class="gh-text">Star</span>
+      <span class="gh-count"><svg viewBox="0 0 24 24" aria-hidden="true"><path clip-rule="evenodd" fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"/></svg><span id="gh-count-num">0</span></span>
+    </a>
+    <div class="dd lang-dd" id="lang-dd">
+      <button class="dd-btn lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="切換語言">
+        <svg class="lang-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4"/><path d="M12 2.8c2.6 2.5 4 5.8 4 9.2s-1.4 6.7-4 9.2c-2.6-2.5-4-5.8-4-9.2s1.4-6.7 4-9.2z"/></svg>
+        <span class="dd-label" id="lang-label">台灣</span>
+        <svg class="dd-caret" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.5 L6 8.5 L10 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="dd-menu lang-menu" role="listbox" aria-label="語言">
+        <button type="button" role="option" data-lang="zh-Hant" data-name="台灣" class="is-sel" style="--i:0">台灣（繁體中文）</button>
+        <button type="button" role="option" data-lang="en-US" data-name="美國" style="--i:1">美國（English）</button>
+      </div>
+    </div>
+  </div>
+  <div class="runwrap">
+    <div class="runmeta">
+      <span id="status-dot" class="dot" data-state="idle"></span>
+      <span id="status" class="status">待命</span>
+      <span id="context" class="context"></span>
+    </div>
+    <button id="run-btn" class="io-btn" type="button">
+      <span class="io-label">執行回測</span>
+      <span class="io-fill" aria-hidden="true"></span>
+      <span class="io-icon" aria-hidden="true"><span class="io-arrow"></span></span>
+    </button>
+  </div>
+  <div id="run-progress" class="run-progress" hidden><div id="run-progress-fill" class="run-progress-fill"></div></div>
+</header>
+
+<div class="workbench">
+
+  <aside class="bench" aria-label="策略台">
+
+    <section class="grp">
+      <h2 class="grp-title"><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M8 3v14"/></svg>資產與區間</h2>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">資料來源</span>
+          <select id="source" name="source">
+            <option value="csv">本地 CSV（data\import_csv）</option>
+            <option value="binance">Binance API（線上）</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">時間週期</span>
+          <select id="interval" name="interval"></select>
+        </label>
+      </div>
+
+      <div class="seg" id="mode-seg" role="tablist" aria-label="回測模式">
+        <button type="button" class="seg-item is-active" data-mode="single" role="tab" aria-selected="true">單一資產</button>
+        <button type="button" class="seg-item" data-mode="multi" role="tab" aria-selected="false">多籌組合</button>
+      </div>
+
+      <div id="single-block">
+        <label class="field">
+          <span class="field-label">資產</span>
+          <span class="combo fxline">
+            <input id="symbol-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="symbol-menu" placeholder="搜尋資產…">
+            <span class="topline" aria-hidden="true"></span>
+            <span class="underline" aria-hidden="true"></span>
+            <div id="symbol-menu" class="combo-menu" role="listbox" hidden></div>
+          </span>
+        </label>
+        <select id="symbol" name="symbol" hidden></select>
+      </div>
+
+      <div id="multi-block" hidden>
+        <span class="field-label">選擇資產（建議 ≥ 3）</span>
+        <div id="symbol-checks" class="elastic-list" role="group" aria-label="多標的資產選擇"></div>
+        <label class="field stacked">
+          <span class="field-label">多標的權重（對應上面順序；留空＝等權）</span>
+          <input name="weights" autocomplete="off" id="weights" type="text" inputmode="decimal" placeholder="例如 0.5, 0.3, 0.2…">
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">快速區間</span>
+          <select id="preset" name="preset">
+            <option value="近 1 年">近 1 年</option>
+            <option value="近 2 年">近 2 年</option>
+            <option value="近 3 年" selected>近 3 年</option>
+            <option value="近 5 年">近 5 年</option>
+            <option value="近 10 年">近 10 年</option>
+            <option value="全部">全部</option>
+            <option value="自訂">自訂</option>
+          </select>
+        </label>
+      </div>
+      <div class="field-row">
+        <div class="field-label" style="padding-bottom:2px">回測區間</div>
+        <div class="dual" id="dual">
+          <div class="track"></div>
+          <div class="fill" id="dual-fill"></div>
+          <input type="range" id="rg-start" min="0" max="1" value="0" aria-label="起始日期">
+          <input type="range" id="rg-end" min="0" max="1" value="1" aria-label="結束日期">
+        </div>
+        <div class="range-note" id="range-note"></div>
+        <input type="hidden" name="start" id="start">
+        <input type="hidden" name="end" id="end">
+      </div>
+      <label class="check">
+        <span class="switch-text">強制刷新數據（清除快取重新下載）</span>
+        <span class="switch"><input name="refresh" autocomplete="off" id="refresh" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+      </label>
+    </section>
+
+    <section class="grp">
+      <h2 class="grp-title"><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6 3 10l4 4"/><path d="M13 6l4 4-4 4"/></svg>策略程式碼</h2>
+      <div class="file-drop">
+        <div class="fd-folder">
+          <div class="fd-front"><div class="fd-tip"></div><div class="fd-cover"></div></div>
+          <div class="fd-back fd-cover"></div>
+        </div>
+        <label class="fd-choose">
+          <input id="strategy-file" type="file" accept=".py">
+          選擇策略檔（.py）
+        </label>
+      </div>
+      <div class="filebar">
+        <select id="load-select" name="load_select" aria-label="載入既有策略"><option value="">載入既有策略…</option></select>
+        <button id="load-btn" class="btn btn-ghost btn-sm" type="button">載入</button>
+      </div>
+      <div class="editor-wrap">
+        <div id="editor-error" class="inline-error" hidden></div>
+        <textarea id="code" spellcheck="false" translate="no" aria-label="策略程式碼"></textarea>
+      </div>
+      <div class="editor-foot">
+        <span class="hint">可用：pd、np、sma、ema、rsi、macd、bollinger、atr、roc。df 欄位 open/high/low/close/volume。</span>
+        <div class="save">
+          <input name="save_name" autocomplete="off" id="save-name" type="text" spellcheck="false" placeholder="策略檔名…" aria-label="另存檔名">
+          <button id="save-btn" class="btn btn-ghost btn-sm" type="button">另存</button>
+          <button id="delete-btn" class="btn btn-ghost btn-sm" type="button" aria-label="刪除選取的策略檔">刪除</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grp" id="params-grp" hidden>
+      <h2 class="grp-title"><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 7h5M12 7h5M3 13h3M10 13h7"/><circle cx="10" cy="7" r="2"/><circle cx="8" cy="13" r="2"/></svg>策略參數</h2>
+      <div id="params" class="params"></div>
+    </section>
+
+    <section class="grp">
+      <h2 class="grp-title"><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 2v2.2M10 15.8V18M2 10h2.2M15.8 10H18M4.3 4.3l1.6 1.6M14.1 14.1l1.6 1.6M15.7 4.3l-1.6 1.6M5.9 14.1l-1.6 1.6"/></svg>回測設定</h2>
+      <div class="field-row">
+        <label class="field"><span class="field-label">初始資金 (USDT)</span><input name="capital" autocomplete="off" id="capital" type="number" value="10000" min="1000" step="1000"></label>
+        <label class="field"><span class="field-label">基礎倉位</span><input name="position_pct" autocomplete="off" id="position_pct" type="number" value="1" min="0.05" max="1" step="0.05"></label>
+      </div>
+      <div class="field-row">
+        <label class="field"><span class="field-label">手續費率</span><input name="fee_rate" autocomplete="off" id="fee_rate" type="number" value="0.001" min="0" max="0.02" step="0.0005"></label>
+        <label class="field"><span class="field-label">滑點</span><input name="slippage" autocomplete="off" id="slippage" type="number" value="0.0005" min="0" max="0.01" step="0.0005"></label>
+      </div>
+      <div class="field-row">
+        <label class="field"><span class="field-label">槓桿</span><input name="leverage" autocomplete="off" id="leverage" type="number" value="1" min="1" max="50" step="1"></label>
+      </div>
+
+      <label class="check">
+        <span class="switch-text">啟用波動目標（抗震盪）</span>
+        <span class="switch"><input name="use_vt" autocomplete="off" id="use-vt" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+      </label>
+      <div id="vt-row" hidden>
+        <label class="field"><span class="field-label">目標年化波動 (%)</span><input name="vt_target" autocomplete="off" id="vt_target" type="number" value="60" min="10" max="200" step="5"></label>
+        <p class="hint" style="max-width:100%">波動目標：倉位 = 基礎倉位 × clip(目標波動 ÷ 平滑後已實現波動, 0.2, 2.0)。高波動自動縮倉、低波動加倉——不砍任何交易，是「倉位公式」不是「濾網」。</p>
+      </div>
+
+      <label class="check">
+        <span class="switch-text">啟用止損 / 止盈（僅做多引擎支援）</span>
+        <span class="switch"><input name="use_sltp" autocomplete="off" id="use-sltp" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+      </label>
+      <div class="field-row" id="sltp-row" hidden>
+        <label class="field"><span class="field-label">止損 (%)</span><input name="stop_loss" autocomplete="off" id="stop_loss" type="number" value="8" min="0.5" max="50" step="0.5"></label>
+        <label class="field"><span class="field-label">止盈 (%)</span><input name="take_profit" autocomplete="off" id="take_profit" type="number" value="20" min="0.5" max="200" step="0.5"></label>
+      </div>
+
+      <details class="sub">
+        <summary>倉位管理（逆馬丁 / 馬丁）</summary>
+        <label class="field">
+          <span class="field-label">模式</span>
+          <select id="pm_mode" name="pm_mode">
+            <option value="fixed">固定倉位</option>
+            <option value="anti">逆馬丁（連勝加倉、連虧縮倉）</option>
+            <option value="martingale">馬丁（連虧加倉）</option>
+          </select>
+        </label>
+        <div id="pm-fields" hidden>
+          <div class="field-row">
+            <label class="field"><span class="field-label">加倉倍率</span><input name="pm_up" autocomplete="off" id="pm_up" type="number" value="1.1" min="1" max="2" step="0.05"></label>
+            <label class="field"><span class="field-label">減倉倍率</span><input name="pm_down" autocomplete="off" id="pm_down" type="number" value="0.9" min="0.1" max="1" step="0.05"></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span class="field-label">倍率上限</span><input name="pm_cap" autocomplete="off" id="pm_cap" type="number" value="2" min="1" max="5" step="0.1"></label>
+            <label class="field"><span class="field-label">倍率下限</span><input name="pm_floor" autocomplete="off" id="pm_floor" type="number" value="0.25" min="0.05" max="1" step="0.05"></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span class="field-label">取樣筆數</span><input name="pm_lookback" autocomplete="off" id="pm_lookback" type="number" value="1" min="1" max="50" step="1"></label>
+            <label class="field"><span class="field-label">遠近衰減</span><input name="pm_decay" autocomplete="off" id="pm_decay" type="number" value="0.5" min="0.1" max="1" step="0.1"></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span class="field-label">單筆下限</span><input name="pm_min_pos" autocomplete="off" id="pm_min_pos" type="number" value="0.05" min="0.01" max="1" step="0.01"></label>
+            <label class="field"><span class="field-label">單筆上限</span><input name="pm_max_pos" autocomplete="off" id="pm_max_pos" type="number" value="1" min="0.1" max="3" step="0.05"></label>
+          </div>
+        </div>
+      </details>
+
+      <label class="check">
+        <span class="switch-text">送入「網格鎖倉引擎」（自動加單 / 鎖倉 / 解鎖）</span>
+        <span class="switch"><input name="use_hedge" autocomplete="off" id="use_hedge" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+      </label>
+    </section>
+
+  </aside>
+
+  <div class="splitter" id="splitter"><button id="split-toggle" class="split-grip" type="button" aria-label="收合／展開左欄">‹</button></div>
+
+  <section class="results" id="main" tabindex="-1" aria-label="讀數區">
+    <h2 class="vh">回測結果</h2>
+    <div class="subnav" role="tablist" aria-label="檢視">
+      <button type="button" class="subnav-item is-active" data-view="report" role="tab" aria-selected="true">回測結果</button>
+      <button type="button" class="subnav-item" data-view="opt" role="tab" aria-selected="false">參數優化</button>
+      <span class="subnav-ind" id="subnav-ind" aria-hidden="true"></span>
+      <div class="subnav-spacer"></div>
+      <span id="engine-badge" class="badge" hidden></span>
+    </div>
+
+    <div id="view-report">
+      <div id="empty-state" class="empty">
+        <div class="empty-creature">
+          <div class="loader" role="status" aria-label="待機中">
+            <svg class="legl" viewBox="0,0,20.69332,68.19944" width="20.69332" height="68.19944">
+              <g transform="translate(-201.44063,-235.75466)">
+                <g stroke-miterlimit="10">
+                  <path d="M218.11971,301.20087c-2.20708,1.73229 -4.41416,0 -4.41416,0l-1.43017,-1.1437c-1.42954,-1.40829 -3.04351,-2.54728 -4.56954,-3.87927c-0.95183,-0.8308 -2.29837,-1.49883 -2.7652,-2.55433c-0.42378,-0.95815 0.14432,-2.02654 0.29355,-3.03399c0.41251,-2.78499 1.82164,-5.43386 2.41472,-8.22683c1.25895,-4.44509 2.73863,-8.98683 3.15318,-13.54796c0.22615,-2.4883 -0.21672,-5.0155 -0.00278,-7.50605c0.30636,-3.56649 1.24602,-7.10406 1.59992,-10.6738c0.29105,-2.93579 -0.00785,-5.9806 -0.00785,-8.93046c0,0 0,-2.44982 3.12129,-2.44982c3.12129,0 3.12129,2.44982 3.12129,2.44982c0,3.06839 0.28868,6.22201 -0.00786,9.27779c-0.34637,3.56935 -1.30115,7.10906 -1.59992,10.6738c-0.2103,2.50918 0.22586,5.05326 -0.00278,7.56284c-0.43159,4.7371 -1.94029,9.46317 -3.24651,14.07835c-0.47439,2.23403 -1.29927,4.31705 -2.05805,6.47156c-0.18628,0.52896 -0.1402,1.0974 -0.327,1.62624c-0.09463,0.26791 -0.64731,0.47816 -0.50641,0.73323c0.19122,0.34617 0.86423,0.3445 1.2346,0.58502c1.88637,1.22503 3.50777,2.79494 5.03,4.28305l0.96971,0.73991c0,0 2.20708,1.73229 0,3.46457z" fill="none" stroke="#191e2e" stroke-width="7"></path>
+                </g>
+              </g>
+            </svg>
+            <svg class="legr" viewBox="0,0,41.02537,64.85502" width="41.02537" height="64.85502">
+              <g transform="translate(-241.54137,-218.44347)">
+                <g stroke-miterlimit="10">
+                  <path d="M279.06674,279.42662c-2.27967,1.98991 -6.08116,0.58804 -6.08116,0.58804l-2.47264,-0.92915c-2.58799,-1.18826 -5.31176,-2.08831 -7.99917,-3.18902c-1.67622,-0.68654 -3.82471,-1.16116 -4.93147,-2.13229c-1.00468,-0.88156 -0.69132,-2.00318 -0.92827,-3.00935c-0.65501,-2.78142 0.12275,-5.56236 -0.287,-8.37565c-0.2181,-4.51941 -0.17458,-9.16283 -1.60696,-13.68334c-0.78143,-2.46614 -2.50162,-4.88125 -3.30086,-7.34796c-1.14452,-3.53236 -1.40387,-7.12078 -2.48433,-10.66266c-0.88858,-2.91287 -2.63779,-5.85389 -3.93351,-8.74177c0,0 -1.07608,-2.39835 3.22395,-2.81415c4.30003,-0.41581 2.41605,1.98254 2.41605,1.98254c1.34779,3.00392 3.13072,6.05282 4.06444,9.0839c1.09065,3.54049 1.33011,7.13302 2.48433,10.66266c0.81245,2.48448 2.5308,4.917 3.31813,7.40431c1.48619,4.69506 1.48366,9.52281 1.71137,14.21503c0.32776,2.25028 0.10631,4.39942 0.00736,6.60975c-0.02429,0.54266 0.28888,1.09302 0.26382,1.63563c-0.01269,0.27488 -0.68173,0.55435 -0.37558,0.78529c0.41549,0.31342 1.34191,0.22213 1.95781,0.40826c3.13684,0.94799 6.06014,2.26892 8.81088,3.52298l1.66093,0.59519c0,0 6.76155,1.40187 4.48187,3.39177z" fill="none" stroke="#000000" stroke-width="7"></path>
+                </g>
+              </g>
+            </svg>
+            <div class="bod">
+              <svg viewBox="0,0,144.10576,144.91623" width="144.10576" height="144.91623">
+                <g transform="translate(-164.41679,-112.94712)">
+                  <g stroke-miterlimit="10">
+                    <path d="M166.9168,184.02633c0,-36.49454 35.0206,-66.07921 72.05288,-66.07921c37.03228,0 67.05288,29.58467 67.05288,66.07921c0,6.94489 -1.08716,13.63956 -3.10292,19.92772c-2.71464,8.46831 -7.1134,16.19939 -12.809,22.81158c-2.31017,2.68194 -7.54471,12.91599 -7.54471,12.91599c0,0 -5.46714,-1.18309 -8.44434,0.6266c-3.86867,2.35159 -10.95356,10.86714 -10.95356,10.86714c0,0 -6.96906,-3.20396 -9.87477,-2.58085c-2.64748,0.56773 -6.72538,5.77072 -6.72538,5.77072c0,0 -5.5023,-4.25969 -7.5982,-4.25969c-3.08622,0 -9.09924,3.48259 -9.09924,3.48259c0,0 -6.0782,-5.11244 -9.00348,-5.91884c-4.26461,-1.17561 -12.23343,0.75049 -12.23343,0.75049c0,0 -5.18164,-8.26065 -7.60688,-9.90388c-3.50443,-2.37445 -8.8271,-3.95414 -8.8271,-3.95414c0,0 -5.33472,-8.81718 -7.27019,-11.40895c-4.81099,-6.44239 -13.46422,-9.83437 -15.65729,-17.76175c-1.53558,-5.55073 -2.35527,-21.36472 -2.35527,-21.36472z" fill="#191e2e" stroke="#000000" stroke-width="5" stroke-linecap="butt"></path>
+                    <path d="M167.94713,180c0,-37.03228 35.0206,-67.05288 72.05288,-67.05288c37.03228,0 67.05288,30.0206 67.05288,67.05288c0,7.04722 -1.08716,13.84053 -3.10292,20.22135c-2.71464,8.59309 -7.1134,16.43809 -12.809,23.14771c-2.31017,2.72146 -7.54471,13.1063 -7.54471,13.1063c0,0 -5.46714,-1.20052 -8.44434,0.63584c-3.86867,2.38624 -10.95356,11.02726 -10.95356,11.02726c0,0 -6.96906,-3.25117 -9.87477,-2.61888c-2.64748,0.5761 -6.72538,5.85575 -6.72538,5.85575c0,0 -5.5023,-4.32246 -7.5982,-4.32246c-3.08622,0 -9.09924,3.5339 -9.09924,3.5339c0,0 -6.0782,-5.18777 -9.00348,-6.00605c-4.26461,-1.19293 -12.23343,0.76155 -12.23343,0.76155c0,0 -5.18164,-8.38236 -7.60688,-10.04981c-3.50443,-2.40943 -8.8271,-4.0124 -8.8271,-4.0124c0,0 -5.33472,-8.9471 -7.27019,-11.57706c-4.81099,-6.53732 -13.46422,-9.97928 -15.65729,-18.02347c-1.53558,-5.63252 -2.35527,-21.67953 -2.35527,-21.67953z" fill="#191e2e" stroke="none" stroke-width="0" stroke-linecap="butt"></path>
+                    <path d="M216.22445,188.06994c0,0 1.02834,11.73245 -3.62335,21.11235c-4.65169,9.3799 -13.06183,10.03776 -13.06183,10.03776c0,0 7.0703,-3.03121 10.89231,-10.7381c4.34839,-8.76831 5.79288,-20.41201 5.79288,-20.41201z" fill="none" stroke="#2f3a50" stroke-width="3" stroke-linecap="round"></path>
+                  </g>
+                </g>
+              </svg>
+              <svg class="head" viewBox="0,0,115.68559,88.29441" width="115.68559" height="88.29441">
+                <g transform="translate(-191.87889,-75.62023)">
+                  <g stroke-miterlimit="10">
+                    <path d="M195.12889,128.77752c0,-26.96048 21.33334,-48.81626 47.64934,-48.81626c26.316,0 47.64935,21.85578 47.64935,48.81626c0,0.60102 -9.22352,20.49284 -9.22352,20.49284l-7.75885,0.35623l-7.59417,6.15039l-8.64295,-1.74822l-11.70703,6.06119l-6.38599,-4.79382l-6.45999,2.36133l-7.01451,-7.38888l-8.11916,1.29382l-6.19237,-6.07265l-7.6263,-1.37795l-4.19835,-7.87062l-4.24236,-4.16907c0,0 -0.13314,-2.0999 -0.13314,-3.29458z" fill="none" stroke="#2f3a50" stroke-width="6" stroke-linecap="butt"></path>
+                    <path d="M195.31785,124.43649c0,-26.96048 21.33334,-48.81626 47.64934,-48.81626c26.316,0 47.64935,21.85578 47.64935,48.81626c0,1.03481 -0.08666,2.8866 -0.08666,2.8866c0,0 16.8538,15.99287 16.21847,17.23929c-0.66726,1.30905 -23.05667,-4.14265 -23.05667,-4.14265l-2.29866,4.5096l-7.75885,0.35623l-7.59417,6.15039l-8.64295,-1.74822l-11.70703,6.06119l-6.38599,-4.79382l-6.45999,2.36133l-7.01451,-7.38888l-8.11916,1.29382l-6.19237,-6.07265l-7.6263,-1.37795l-4.19835,-7.87062l-4.24236,-4.16907c0,0 -0.13314,-2.0999 -0.13314,-3.29458z" fill="#191e2e" stroke-opacity="0.48627" stroke="#ffffff" stroke-width="0" stroke-linecap="butt"></path>
+                    <path d="M271.10348,122.46768l10.06374,-3.28166l24.06547,24.28424" fill="none" stroke="#2f3a50" stroke-width="6" stroke-linecap="round"></path>
+                    <path d="M306.56448,144.85764l-41.62024,-8.16845l2.44004,-7.87698" fill="none" stroke="#000000" stroke-width="3.5" stroke-linecap="round"></path>
+                    <path d="M276.02738,115.72434c-0.66448,-4.64715 2.56411,-8.95308 7.21127,-9.61756c4.64715,-0.66448 8.95309,2.56411 9.61757,7.21126c0.46467,3.24972 -1.94776,8.02206 -5.96624,9.09336c-2.11289,-1.73012 -5.08673,-5.03426 -5.08673,-5.03426c0,0 -4.12095,1.16329 -4.60481,1.54229c-0.16433,-0.04891 -0.62732,-0.38126 -0.72803,-0.61269c-0.30602,-0.70328 -0.36302,-2.02286 -0.44303,-2.58239z" fill="#ffffff" stroke="none" stroke-width="0.5" stroke-linecap="butt"></path>
+                    <path d="M242.49281,125.6424c0,-4.69442 3.80558,-8.5 8.5,-8.5c4.69442,0 8.5,3.80558 8.5,8.5c0,4.69442 -3.80558,8.5 -8.5,8.5c-4.69442,0 -8.5,-3.80558 -8.5,-8.5z" fill="#ffffff" stroke="none" stroke-width="0.5" stroke-linecap="butt"></path>
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <h3>先寫一個策略，再按執行回測</h3>
+        <p>在左側編輯器寫 <code>generate(df, params)</code>，回傳目標倉位（0 空倉、1 做多、-1 做空）。右側會顯示績效、權益曲線、買賣點與交易明細。</p>
+      </div>
+
+      <div id="skeleton" class="hidden" aria-hidden="true">
+        <div class="sk sk-line w-40"></div>
+        <div class="sk-row"><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div><div class="sk sk-card"></div></div>
+        <div class="sk sk-block"></div>
+        <div class="sk sk-block short"></div>
+      </div>
+
+      <div id="report" hidden>
+        <div id="notice" class="notice" hidden></div>
+        <div id="readout" class="readout"></div>
+        <div id="hedge-stats" class="hedge-stats" hidden></div>
+
+        <section class="block">
+          <div class="block-head">
+            <h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14l5-5 3 3 6-6"/><path d="M13 6h4v4"/></svg>權益曲線</h3>
+            <span class="miniseg" id="equity-seg">
+              <button type="button" data-t="linear" class="is-active">線性</button>
+              <button type="button" data-t="log">對數</button>
+            </span>
+            <span class="pin-actions">
+              <button type="button" id="pin-btn" class="btn btn-ghost btn-sm">釘選目前</button>
+              <button type="button" id="unpin-btn" class="btn btn-ghost btn-sm">清除釘選</button>
+            </span>
+            <span class="block-note" id="equity-note"></span>
+          </div>
+          <div id="chart-equity" class="chart"></div>
+        </section>
+
+        <section class="block">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 3-3 6 6"/><path d="M17 14h-4v-4"/></svg>回撤</h3></div>
+          <div id="chart-drawdown" class="chart short"></div>
+        </section>
+
+        <section class="block" id="block-price">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M6 3v3M6 12v5M14 3v4M14 13v4"/><rect x="4" y="6" width="4" height="6" rx="0.6"/><rect x="12" y="7" width="4" height="6" rx="0.6"/></svg>價格與買賣點</h3>
+            <span class="miniseg" id="price-seg">
+              <button type="button" data-t="auto" class="is-active">自動</button>
+              <button type="button" data-t="candle">K線</button>
+              <button type="button" data-t="line">收盤線</button>
+            </span>
+            <span class="block-note" id="price-note"></span></div>
+          <div id="chart-price" class="chart tall"></div>
+        </section>
+
+        <section class="block" id="block-rolling">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 10h4l2-5 3 10 2-5h3"/></svg>滾動指標</h3>
+            <span class="miniseg" id="rolling-win">
+              <button type="button" data-w="30" class="is-active">30</button>
+              <button type="button" data-w="90">90</button>
+              <button type="button" data-w="180">180</button>
+            </span>
+            <span class="block-note" id="rolling-note"></span></div>
+          <div id="chart-rolling" class="chart short"></div>
+        </section>
+
+        <section class="block" id="block-cost">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 3v5M10 12v5M5 10h10"/></svg>成本拖累</h3><span class="block-note" id="cost-note"></span></div>
+          <div id="chart-cost" class="chart short"></div>
+        </section>
+
+        <section class="block" id="block-exposure">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 14h14M3 14V6h14"/></svg>曝險（持倉比例）</h3><span class="block-note" id="exposure-note"></span></div>
+          <div id="chart-exposure" class="chart short"></div>
+        </section>
+
+        <section class="block" id="block-perasset" hidden>
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 9h14M9 4v12"/></svg>各資產績效</h3></div>
+          <div id="per-asset" class="tablewrap"></div>
+        </section>
+
+        <section class="block">
+          <div class="block-head"><h3><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 6h10M5 10h10M5 14h6"/></svg>交易明細</h3><span class="block-note" id="trades-note"></span></div>
+          <div id="trades" class="tablewrap"></div>
+        </section>
+
+        <details class="block sub-block">
+          <summary><h3>完整績效指標</h3></summary>
+          <div id="metrics-full" class="tablewrap"></div>
+        </details>
+      </div>
+    </div>
+
+    <div id="view-manual" hidden>
+      <div class="manual-bar">
+        <button id="manual-download" class="btn btn-ghost btn-sm" type="button">下載手冊（.md 文字檔）</button>
+      </div>
+      <p class="manual-note"><strong>先下載，再交給 AI。</strong>你可以把整份手冊下載成 .md 檔，直接貼給 AI，然後向它提出你的需求（例如：撰寫新策略、新增指標、調整回測設定、載入資料），它就能照這份規格幫你實作。建議使用 DeepSeek 的 API，成本較低。</p>
+      <article id="manual" class="manual"></article>
+    </div>
+
+    <div id="view-opt" hidden>
+      <div class="opt-builder">
+        <div class="opt-row">
+          <label class="field"><span class="field-label">優化指標</span>
+            <select id="opt-metric">
+              <option value="sharpe">夏普比率</option>
+              <option value="total_return">總收益率</option>
+              <option value="calmar">卡瑪比率</option>
+              <option value="cagr">年化 (CAGR)</option>
+              <option value="profit_factor">盈虧比</option>
+              <option value="max_drawdown">最大回撤</option>
+            </select>
+          </label>
+          <span class="block-note" id="opt-note">以目前資產 / 週期 / 區間回測</span>
+          <button id="opt-run" class="io-btn io-btn-sm" type="button">
+            <span class="io-label">開始優化</span>
+            <span class="io-fill" aria-hidden="true"></span>
+            <span class="io-icon" aria-hidden="true"><span class="io-arrow"></span></span>
+          </button>
+        </div>
+        <div id="opt-params" class="opt-params"></div>
+        <p class="hint" style="max-width:100%">勾選要掃描的參數（最多 2 個＝畫熱力圖），設定最小 / 最大 / 步長；未勾的用目前「策略參數」的值。組合數上限 400。</p>
+      </div>
+      <div id="opt-output">
+        <div class="empty">
+          <h3>參數優化</h3>
+          <p>選擇指標與 1–2 個參數，按「開始優化」。結果會顯示熱力圖與明細表，用來找**穩定的參數區**（而非單一尖峰——尖峰通常是過擬合）。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<div id="palette" class="palette" hidden>
+  <div class="palette-box" role="dialog" aria-modal="true" aria-label="命令面板">
+    <div class="fxline">
+      <input id="palette-input" type="text" placeholder="輸入指令…（執行回測 / 切分頁 / 載入策略）" autocomplete="off" spellcheck="false" aria-label="命令">
+      <span class="topline" aria-hidden="true"></span>
+      <span class="underline" aria-hidden="true"></span>
+    </div>
+    <div id="palette-list" class="palette-list"></div>
+  </div>
+</div>
+
+<script src="vendor/galaxy.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="assets/i18n.js?v=2"></script>
+<script src="assets/app.js?v=2"></script>
+</body>
+</html>
