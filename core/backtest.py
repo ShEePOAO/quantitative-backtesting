@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from core.indicators import atr as _atr
 from core.metrics import TRADE_COLUMNS, compute_metrics
 
 LS_TRADE_COLUMNS = ["方向"] + TRADE_COLUMNS
@@ -75,6 +76,15 @@ def _vol_scale(df, target, window, cap, floor, periods_per_year):
     return sc.bfill().fillna(1.0)
 
 
+def _atr_series(df, atr_stop_mult, atr_stop_n):
+    if atr_stop_mult and float(atr_stop_mult) > 0:
+        try:
+            return _atr(df, int(atr_stop_n)).astype(float)
+        except Exception:
+            return None
+    return None
+
+
 def run_backtest(
     df,
     signals,
@@ -91,19 +101,33 @@ def run_backtest(
     vol_floor=0.2,
     periods_per_year=365,
     risk_mgmt=None,
+    trailing_stop_pct=None,
+    max_hold_bars=None,
+    atr_stop_mult=None,
+    atr_stop_n=14,
+    max_drawdown_stop=None,
 ):
     if len(df) < 2:
         raise ValueError("數據不足，無法回測")
     sig = signals.reindex(df.index).fillna(0.0).clip(0, 1)
     vol_scale = _vol_scale(df, vol_target, vol_window, vol_cap, vol_floor, periods_per_year)
+    atr_series = _atr_series(df, atr_stop_mult, atr_stop_n)
+    trail_pct = float(trailing_stop_pct) if trailing_stop_pct else None
+    atr_mult = float(atr_stop_mult) if atr_series is not None else None
+    dds = float(max_drawdown_stop) if max_drawdown_stop else None
+    mhold = int(max_hold_bars) if max_hold_bars else None
     n = len(df)
     cash = float(initial_capital)
     qty = 0.0
     entry_time = None
     entry_price = None
     entry_cost = None
+    entry_i = -1
     stop_price = None
     take_price = None
+    trail_peak = None
+    halted = False
+    peak_eq = float(initial_capital)
     equity_vals = np.zeros(n)
     in_market = np.zeros(n, dtype=bool)
     buy_marks = np.zeros(n, dtype=bool)
@@ -114,7 +138,7 @@ def run_backtest(
     liquidated = False
 
     def record_exit(i, px, reason):
-        nonlocal cash, qty, entry_time, entry_price, entry_cost, stop_price, take_price
+        nonlocal cash, qty, entry_time, entry_price, entry_cost, stop_price, take_price, entry_i, trail_peak
         proceeds = qty * px * (1 - fee_rate)
         cash += proceeds
         trades.append(
@@ -135,6 +159,8 @@ def run_backtest(
         sell_marks[i] = True
         qty = 0.0
         entry_time = entry_price = entry_cost = stop_price = take_price = None
+        entry_i = -1
+        trail_peak = None
 
     for i in range(n):
         o = float(df["open"].iloc[i])
@@ -143,14 +169,26 @@ def run_backtest(
         c = float(df["close"].iloc[i])
         exited = False
         if i > 0 and qty > 0:
-            if stop_price is not None and l <= stop_price:
-                record_exit(i, min(o, stop_price) * (1 - slippage), "停損")
+            if trail_pct is not None and trail_peak is not None:
+                trail_peak = max(trail_peak, h)
+                tlvl = trail_peak * (1 - trail_pct)
+            else:
+                tlvl = None
+            slvl = stop_price
+            if tlvl is not None:
+                slvl = tlvl if slvl is None else max(slvl, tlvl)
+            if slvl is not None and l <= slvl:
+                reason = "移動停損" if (tlvl is not None and slvl == tlvl) else "停損"
+                record_exit(i, min(o, slvl) * (1 - slippage), reason)
                 exited = True
             elif take_price is not None and h >= take_price:
                 record_exit(i, max(o, take_price) * (1 - slippage), "止盈")
                 exited = True
+            elif mhold is not None and entry_i >= 0 and (i - entry_i) >= mhold:
+                record_exit(i, o * (1 - slippage), "時間出場")
+                exited = True
         target = float(sig.iloc[i - 1]) if i > 0 else 0.0
-        if target > 0 and qty <= 0 and not exited:
+        if target > 0 and qty <= 0 and not exited and not halted:
             px = o * (1 + slippage)
             vsc = float(vol_scale.iloc[i - 1]) if (vol_scale is not None and i > 0) else 1.0
             spend = max(prev_equity, 0.0) * sizer.pct(position_pct) * leverage * vsc
@@ -160,13 +198,26 @@ def run_backtest(
             entry_time = df.index[i]
             entry_price = px
             entry_cost = cost
+            entry_i = i
+            cands = []
             if stop_loss_pct:
-                stop_price = px * (1 - stop_loss_pct)
+                cands.append(px * (1 - float(stop_loss_pct)))
+            if atr_series is not None:
+                a = float(atr_series.iloc[max(0, i - 1)])
+                if np.isfinite(a) and a > 0:
+                    cands.append(px - atr_mult * a)
+            stop_price = max(cands) if cands else None
             if take_profit_pct:
-                take_price = px * (1 + take_profit_pct)
+                take_price = px * (1 + float(take_profit_pct))
+            trail_peak = h if trail_pct is not None else None
             buy_marks[i] = True
-            if stop_price is not None and l <= stop_price:
-                record_exit(i, min(o, stop_price) * (1 - slippage), "停損")
+            slvl = stop_price
+            if trail_pct is not None and trail_peak is not None:
+                tlvl = trail_peak * (1 - trail_pct)
+                slvl = tlvl if slvl is None else max(slvl, tlvl)
+            if slvl is not None and l <= slvl:
+                reason = "移動停損" if (tlvl is not None and slvl == tlvl) else "停損"
+                record_exit(i, min(o, slvl) * (1 - slippage), reason)
                 exited = True
             elif take_price is not None and h >= take_price:
                 record_exit(i, max(o, take_price) * (1 - slippage), "止盈")
@@ -176,6 +227,15 @@ def run_backtest(
         equity_vals[i] = cash + qty * c
         in_market[i] = qty > 0
         prev_equity = equity_vals[i]
+        peak_eq = max(peak_eq, equity_vals[i])
+        if dds is not None and not halted and peak_eq > 0 and (peak_eq - equity_vals[i]) / peak_eq >= dds:
+            if qty > 0:
+                record_exit(i, c * (1 - slippage), "回撤停手")
+                equity_vals[i] = cash
+                in_market[i] = False
+            halted = True
+            prev_equity = equity_vals[i]
+            peak_eq = equity_vals[i]
         if equity_vals[i] <= 0:
             liquidated = True
             equity_vals[i:] = 0.0
@@ -224,13 +284,25 @@ def run_long_short_backtest(
     vol_floor=0.2,
     periods_per_year=365,
     risk_mgmt=None,
+    trailing_stop_pct=None,
+    max_hold_bars=None,
+    atr_stop_mult=None,
+    atr_stop_n=14,
+    max_drawdown_stop=None,
 ):
     if len(df) < 2:
         raise ValueError("數據不足，無法回測")
     raw = pd.Series(np.asarray(positions, dtype=float), index=df.index).reindex(df.index).fillna(0.0)
     vol_scale = _vol_scale(df, vol_target, vol_window, vol_cap, vol_floor, periods_per_year)
+    atr_series = _atr_series(df, atr_stop_mult, atr_stop_n)
+    trail_pct = float(trailing_stop_pct) if trailing_stop_pct else None
+    atr_mult = float(atr_stop_mult) if atr_series is not None else None
+    dds = float(max_drawdown_stop) if max_drawdown_stop else None
+    mhold = int(max_hold_bars) if max_hold_bars else None
     tgt = raw.apply(lambda v: 1.0 if v > 0 else (-1.0 if v < 0 else 0.0))
     o = df["open"].astype(float).values
+    h = df["high"].astype(float).values
+    l = df["low"].astype(float).values
     c = df["close"].astype(float).values
     n = len(df)
     cash = float(initial_capital)
@@ -239,6 +311,11 @@ def run_long_short_backtest(
     entry_price = None
     entry_time = None
     entry_fee = 0.0
+    entry_i = -1
+    stop_price = None
+    trail_ext = None
+    halted = False
+    peak_eq = float(initial_capital)
     equity_vals = np.zeros(n)
     in_market = np.zeros(n, dtype=bool)
     buy_marks = np.zeros(n, dtype=bool)
@@ -249,19 +326,26 @@ def run_long_short_backtest(
     liquidated = False
 
     def open_pos(s, i, price, time, notional):
-        nonlocal cash, side, qty, entry_price, entry_time, entry_fee
+        nonlocal cash, side, qty, entry_price, entry_time, entry_fee, entry_i, stop_price, trail_ext
         fill = price * (1 + slippage) if s > 0 else price * (1 - slippage)
         q = notional / fill
         fee = q * fill * fee_rate
         cash -= fee
         side, qty, entry_price, entry_time, entry_fee = s, q, fill, time, fee
+        entry_i = i
+        stop_price = None
+        if atr_series is not None:
+            a = float(atr_series.iloc[max(0, i - 1)])
+            if np.isfinite(a) and a > 0:
+                stop_price = fill - atr_mult * a if s > 0 else fill + atr_mult * a
+        trail_ext = (h[i] if s > 0 else l[i]) if trail_pct is not None else None
         if s > 0:
             buy_marks[i] = True
         else:
             sell_marks[i] = True
 
     def close_pos(i, price, time, reason):
-        nonlocal cash, side, qty, entry_price, entry_time, entry_fee
+        nonlocal cash, side, qty, entry_price, entry_time, entry_fee, entry_i, stop_price, trail_ext
         fill = price * (1 - slippage) if side > 0 else price * (1 + slippage)
         gross = qty * (fill - entry_price) * side
         xfee = qty * fill * fee_rate
@@ -289,10 +373,30 @@ def run_long_short_backtest(
         else:
             buy_marks[i] = True
         side, qty, entry_price, entry_time, entry_fee = 0.0, 0.0, None, None, 0.0
+        entry_i = -1
+        stop_price = None
+        trail_ext = None
 
     for i in range(n):
+        stopped = False
+        if side != 0.0 and i > 0:
+            if trail_pct is not None and trail_ext is not None:
+                trail_ext = max(trail_ext, h[i]) if side > 0 else min(trail_ext, l[i])
+            slvl = stop_price
+            tlvl = None
+            if trail_pct is not None and trail_ext is not None:
+                tlvl = trail_ext * (1 - trail_pct) if side > 0 else trail_ext * (1 + trail_pct)
+                slvl = tlvl if slvl is None else (max(slvl, tlvl) if side > 0 else min(slvl, tlvl))
+            hit = slvl is not None and ((side > 0 and l[i] <= slvl) or (side < 0 and h[i] >= slvl))
+            if hit:
+                px = min(o[i], slvl) if side > 0 else max(o[i], slvl)
+                close_pos(i, px, df.index[i], "移動停損" if (tlvl is not None and slvl == tlvl) else "停損")
+                stopped = True
+            elif mhold is not None and entry_i >= 0 and (i - entry_i) >= mhold:
+                close_pos(i, o[i], df.index[i], "時間出場")
+                stopped = True
         target = float(tgt.iloc[i - 1]) if i > 0 else 0.0
-        if target != side:
+        if not stopped and not halted and target != side:
             if side != 0.0:
                 close_pos(i, o[i], df.index[i], "訊號離場" if target == 0 else "反手")
             if target != 0.0:
@@ -304,6 +408,15 @@ def run_long_short_backtest(
         equity_vals[i] = cash + all_pnl
         in_market[i] = side != 0.0
         prev_equity = equity_vals[i]
+        peak_eq = max(peak_eq, equity_vals[i])
+        if dds is not None and not halted and peak_eq > 0 and (peak_eq - equity_vals[i]) / peak_eq >= dds:
+            if side != 0.0:
+                close_pos(i, c[i], df.index[i], "回撤停手")
+                equity_vals[i] = cash
+                in_market[i] = False
+            halted = True
+            prev_equity = equity_vals[i]
+            peak_eq = equity_vals[i]
         if equity_vals[i] <= 0:
             liquidated = True
             equity_vals[i:] = 0.0

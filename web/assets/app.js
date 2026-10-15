@@ -390,12 +390,28 @@ async function parseParams() {
 function renderStrategyFlags(f) {
   const box = $("#strategy-flags");
   if (!box) return;
-  const parts = [];
-  if (f && f.use_vol_target) parts.push(`${T("波動目標")} ${Math.round((f.vol_target || 0) * 100)}%`);
-  if (f && f.use_hedge) parts.push(T("網格鎖倉引擎"));
-  if (!parts.length) { box.hidden = true; box.textContent = ""; return; }
+  const chips = [];
+  if (f) {
+    if (f.use_vol_target) chips.push(`${T("波動目標")} ${Math.round((f.vol_target || 0) * 100)}%`);
+    if (f.trailing_stop_pct) chips.push(`${T("移動停損")} ${Math.round(f.trailing_stop_pct * 100)}%`);
+    if (f.atr_stop_mult) chips.push(`${T("ATR 停損")} ×${f.atr_stop_mult}`);
+    if (f.max_hold_bars) chips.push(`${T("最長持倉")} ${f.max_hold_bars} ${T("根")}`);
+    if (f.max_drawdown_stop) chips.push(`${T("回撤停損")} ${Math.round(f.max_drawdown_stop * 100)}%`);
+    if (f.target_leverage) chips.push(`${T("目標槓桿")} ${f.target_leverage}×`);
+    if (f.weight_mode === "risk_parity") chips.push(T("風險平價"));
+    if (f.use_hedge) chips.push(T("網格鎖倉引擎"));
+  }
+  box.innerHTML = "";
+  if (!chips.length) { box.hidden = true; return; }
   box.hidden = false;
-  box.textContent = `${T("策略宣告")}：${parts.join(" · ")}`;
+  box.appendChild(el("span", { class: "flags-label", text: T("策略宣告") }));
+  const wrap2 = el("span", { class: "flags-chips" });
+  chips.forEach((t, i) => {
+    const chip = el("span", { class: "flag-chip", text: t });
+    chip.style.setProperty("--i", i);
+    wrap2.appendChild(chip);
+  });
+  box.appendChild(wrap2);
 }
 function renderParams(defs) {
   const wrap = $("#params");

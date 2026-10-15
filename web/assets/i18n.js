@@ -297,6 +297,8 @@
     "資料只到": "Data ends", "，比你選的結束日": ", earlier than your end date", "早。": ".",
     "只有": "Only", "根 K 線，樣本偏少，回測結果參考性低。": "bars — the sample is small, so results are unreliable.",
     "策略宣告": "Strategy declares", "波動目標": "Volatility target", "網格鎖倉引擎": "Grid-hedge engine",
+    "移動停損": "Trailing stop", "ATR 停損": "ATR stop", "最長持倉": "Max hold", "回撤停損": "Drawdown stop",
+    "目標槓桿": "Target leverage", "風險平價": "Risk parity",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };
 

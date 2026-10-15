@@ -286,7 +286,9 @@ def run_custom(df, sig, settings, periods_per_year, use_hedge=False):
         return res, True, True
     if (sig < 0).any():
         ls_keys = {k: v for k, v in settings.items()
-                   if k in ("initial_capital", "fee_rate", "slippage", "position_pct", "leverage", "vol_target", "risk_mgmt")}
+                   if k in ("initial_capital", "fee_rate", "slippage", "position_pct", "leverage", "vol_target",
+                            "risk_mgmt", "trailing_stop_pct", "max_hold_bars", "atr_stop_mult", "atr_stop_n",
+                            "max_drawdown_stop")}
         return run_long_short_backtest(df, sig, periods_per_year=periods_per_year, **ls_keys), True, False
     return run_backtest(df, sig.clip(0, 1), periods_per_year=periods_per_year, **settings), False, False
 
@@ -573,14 +575,51 @@ def _parse_request(req):
 
 
 def strategy_flags(ns):
-    vt = ns.get("USE_VOL_TARGET")
-    vol = ns.get("VOL_TARGET")
-    vol = float(vol) if isinstance(vol, (int, float)) else 0.6
+    def num(v):
+        return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    vt = bool(ns.get("USE_VOL_TARGET"))
+    vol = num(ns.get("VOL_TARGET"))
+    trail = num(ns.get("TRAIL_PCT"))
+    use_trail = bool(ns.get("USE_TRAILING_STOP")) or (trail is not None)
+    atr_mult = num(ns.get("ATR_STOP_MULT"))
+    use_atr = bool(ns.get("USE_ATR_STOP")) or (atr_mult is not None)
+    atr_n = num(ns.get("ATR_STOP_N"))
+    mhold = num(ns.get("MAX_HOLD_BARS"))
+    dd = num(ns.get("MAX_DRAWDOWN_STOP"))
+    lev = num(ns.get("TARGET_LEVERAGE"))
+    wmode = ns.get("WEIGHT_MODE")
     return {
-        "use_vol_target": bool(vt),
-        "vol_target": (vol if vt else None),
+        "use_vol_target": vt,
+        "vol_target": (vol if (vt and vol is not None) else (0.6 if vt else None)),
         "use_hedge": bool(ns.get("USE_HEDGE")),
+        "trailing_stop_pct": (trail if use_trail else None),
+        "atr_stop_mult": (atr_mult if use_atr else None),
+        "atr_stop_n": (int(atr_n) if atr_n else 14),
+        "max_hold_bars": (int(mhold) if mhold else None),
+        "max_drawdown_stop": dd,
+        "target_leverage": lev,
+        "weight_mode": (str(wmode) if isinstance(wmode, str) else None),
     }
+
+
+def _apply_flags(settings, use_hedge, flags):
+    if flags.get("use_vol_target"):
+        settings["vol_target"] = flags["vol_target"]
+    if flags.get("trailing_stop_pct"):
+        settings["trailing_stop_pct"] = flags["trailing_stop_pct"]
+    if flags.get("atr_stop_mult"):
+        settings["atr_stop_mult"] = flags["atr_stop_mult"]
+        settings["atr_stop_n"] = flags.get("atr_stop_n", 14)
+    if flags.get("max_hold_bars"):
+        settings["max_hold_bars"] = flags["max_hold_bars"]
+    if flags.get("max_drawdown_stop"):
+        settings["max_drawdown_stop"] = flags["max_drawdown_stop"]
+    if flags.get("target_leverage"):
+        settings["leverage"] = flags["target_leverage"]
+    if flags.get("use_hedge"):
+        use_hedge = True
+    return use_hedge
 
 
 def run_request_stream(req):
@@ -593,10 +632,7 @@ def run_request_stream(req):
     use_hedge = bool(req.get("use_hedge", False))
     ppy = PERIODS_PER_YEAR[interval]
     flags = strategy_flags(ns)
-    if flags["use_vol_target"]:
-        settings["vol_target"] = flags["vol_target"]
-    if flags["use_hedge"]:
-        use_hedge = True
+    use_hedge = _apply_flags(settings, use_hedge, flags)
 
     if req.get("mode") == "multi":
         symbols = req.get("symbols") or []
@@ -605,6 +641,17 @@ def run_request_stream(req):
         n = len(symbols)
         total = float(settings["initial_capital"])
         w = _weights(symbols, req.get("weights"))
+        if flags.get("weight_mode") == "risk_parity":
+            inv = {}
+            for s in symbols:
+                try:
+                    d2 = load_df(s, interval, start, end, refresh, source)
+                    rv = float(d2["close"].astype(float).pct_change().std())
+                    inv[s] = (1.0 / rv) if rv > 0 else 0.0
+                except Exception:
+                    inv[s] = 0.0
+            tot = sum(inv.values())
+            w = {s: (inv[s] / tot if tot > 0 else 1.0 / len(symbols)) for s in symbols}
         caps = {s: total * w[s] for s in symbols}
         curves, bh_curves, per_asset = {}, {}, {}
         trades_all, exposures = [], []
@@ -662,10 +709,7 @@ def optimize_stream(req):
     if not grid:
         raise ValueError("請設定要掃描的參數範圍")
     flags = strategy_flags(ns)
-    if flags["use_vol_target"]:
-        settings["vol_target"] = flags["vol_target"]
-    if flags["use_hedge"]:
-        use_hedge = True
+    use_hedge = _apply_flags(settings, use_hedge, flags)
 
     df = load_df(symbol, interval, start, end, refresh, source)
     if len(df) < 30:
