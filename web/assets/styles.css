@@ -400,13 +400,17 @@ textarea#code:focus { outline: none; }
 .empty-note { color: var(--ink-3); font-size: 12.5px; }
 .empty-manual { margin-top: 8px; font-family: var(--font); font-size: 12.5px; color: var(--ink-3); background: none; border: 0; border-bottom: 1px dashed color-mix(in srgb, var(--ink-3) 55%, transparent); padding: 0 1px 1px; cursor: pointer; transition: color .2s ease, border-color .2s ease; }
 .empty-manual:hover { color: var(--accent); border-color: var(--accent); }
-.empty-update { display: inline-flex; align-items: center; gap: 7px; margin: 14px auto 0; padding: 7px 15px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink-2); font-family: var(--font); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .1s ease; }
-.empty-update:hover { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
-.empty-update:active { transform: scale(.97); }
-.empty-update:disabled { opacity: .7; cursor: progress; }
-.empty-update svg { width: 15px; height: 15px; }
-.empty-update.busy svg { animation: spin .9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.doc-btn { display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: fit-content; height: 46px; margin: 16px auto 0; padding: 0 16px; border: none; border-radius: 8px; background: #31314F; cursor: pointer; transition: all .3s; }
+.doc-btn:hover { background: #3A3A5E; }
+.doc-btn:active { transform: scale(.95); }
+.doc-btn:disabled { opacity: .7; cursor: progress; }
+.folderContainer { width: 40px; height: fit-content; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
+.fileBack { z-index: 1; width: 80%; height: auto; }
+.filePage { width: 50%; height: auto; position: absolute; z-index: 2; transition: all .3s ease-out; }
+.fileFront { width: 85%; height: auto; position: absolute; z-index: 3; opacity: .95; transform-origin: bottom; transition: all .3s ease-out; }
+.doc-text { color: #fff; font-family: var(--font); font-size: 13.5px; font-weight: 600; letter-spacing: .5px; }
+.doc-btn:hover .filePage { transform: translateY(-6px); }
+.doc-btn:hover .fileFront { transform: rotateX(30deg); }
 
 .notice { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; border: 1px solid; }
 .notice[data-kind="ok"] { background: #E6EFE4; border-color: #BCD6B6; color: #2E5B3C; }
