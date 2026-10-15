@@ -844,12 +844,18 @@ function plotGrow(sel, traces, layout) {
   if (!anim.length) { Plotly.newPlot(gd, traces, layout, PLOT_CONFIG); return; }
   const full = {};
   anim.forEach((i) => { full[i] = { x: traces[i].x, y: traces[i].y }; });
-  let yMin = Infinity, yMax = -Infinity;
-  traces.forEach((t) => { if (Array.isArray(t.y)) t.y.forEach((v) => { if (typeof v === "number" && isFinite(v)) { if (v < yMin) yMin = v; if (v > yMax) yMax = v; } }); });
+  let yMin = Infinity, yMax = -Infinity, xMin, xMax;
+  traces.forEach((t) => {
+    if (Array.isArray(t.x)) t.x.forEach((x) => { if (x == null) return; if (xMin === undefined || x < xMin) xMin = x; if (xMax === undefined || x > xMax) xMax = x; });
+    if (Array.isArray(t.y)) t.y.forEach((v) => { if (typeof v === "number" && isFinite(v)) { if (v < yMin) yMin = v; if (v > yMax) yMax = v; } });
+  });
   const lay = Object.assign({}, layout);
   if (lay.yaxis && lay.yaxis.type !== "log" && isFinite(yMin) && isFinite(yMax) && yMax > yMin) {
     const pad = (yMax - yMin) * 0.06;
     lay.yaxis = Object.assign({}, lay.yaxis, { range: [yMin - pad, yMax + pad] });
+  }
+  if (xMin !== undefined && xMax !== undefined && xMin !== xMax) {
+    lay.xaxis = Object.assign({}, lay.xaxis, { range: [xMin, xMax] });
   }
   const START = 2;
   const init = traces.map((t, i) => {
