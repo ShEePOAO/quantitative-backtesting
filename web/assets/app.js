@@ -457,6 +457,7 @@ function renderParams(defs) {
   const wrap = $("#params");
   const grp = $("#params-grp");
   const keys = Object.keys(defs);
+  const prevDefs = state.paramDefs || {};
   state.paramDefs = defs || {};
   state._optSig = null;
   if (!keys.length) { grp.hidden = true; wrap.innerHTML = ""; return; }
@@ -472,12 +473,13 @@ function renderParams(defs) {
       step: d.step != null ? d.step : (d.type === "int" ? 1 : 0.1),
       min: d.min != null ? d.min : null, max: d.max != null ? d.max : null,
     });
-    if (prev[key] != null) input.value = prev[key];
+    const defChanged = !prevDefs[key] || prevDefs[key].default !== d.default;
+    if (prev[key] != null && !defChanged) input.value = prev[key];
     else input.value = d.default != null ? d.default : "";
     if (d.type === "choice") {
       const sel = el("select", { "data-pkey": key, id: "param-" + key });
       for (const ch of d.choices) sel.appendChild(el("option", { value: ch }, [ch]));
-      sel.value = prev[key] != null ? prev[key] : d.default;
+      sel.value = (prev[key] != null && !defChanged) ? prev[key] : d.default;
       wrap.appendChild(el("label", { class: "field" }, [el("span", { class: "field-label", text: d.label || key }), sel]));
     } else {
       wrap.appendChild(el("label", { class: "field" }, [el("span", { class: "field-label", text: d.label || key }), input]));
