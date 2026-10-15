@@ -956,6 +956,7 @@ input[type="range"].mix::-moz-range-thumb {
 .dd.open .dd-caret { transform: rotate(180deg); }
 .dd-menu { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; right: 0; background: color-mix(in srgb, var(--surface) 50%, transparent); -webkit-backdrop-filter: blur(13px) saturate(1.3); backdrop-filter: blur(13px) saturate(1.3); border: 1px solid color-mix(in srgb, var(--line-strong) 62%, transparent); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 5px; display: flex; flex-direction: column; gap: 2px; transform-origin: top center; opacity: 0; transform: translateY(-6px) scale(.98); pointer-events: none; transition: opacity .18s ease, transform .18s cubic-bezier(.2, .7, .2, 1); }
 .dd.open .dd-menu { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.field:has(.dd.open), .opt-row:has(.dd.open) { position: relative; z-index: 100; }
 .dd-menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 8px 10px; font-family: var(--font); font-size: 13px; color: var(--ink); cursor: pointer; opacity: 0; transform: translateY(-4px); }
 .dd.open .dd-menu button { animation: dd-item .24s cubic-bezier(.2, .7, .2, 1) forwards; animation-delay: calc(var(--i, 0) * 28ms); }
 .dd-menu button:hover, .dd-menu button.is-sel { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
