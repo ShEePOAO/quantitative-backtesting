@@ -1,3 +1,4 @@
+import ast
 import inspect
 import itertools
 import os
@@ -8,7 +9,7 @@ import pandas as pd
 from config import ASSETS, INTERVALS, PERIODS_PER_YEAR, STOCK_INTERVALS, STOCK_SYMBOLS
 from core.backtest import run_backtest, run_long_short_backtest
 from core.hedge import DEFAULT_HEDGE_PARAMS, DEFAULT_HEDGE_SETTINGS, run_hedge_backtest
-from core.indicators import atr, bollinger, ema, macd, roc, rsi, sma
+from core import indicators as ind
 from core.metrics import TRADE_COLUMNS, compute_metrics
 from data.fetcher import get_data, import_available
 
@@ -16,10 +17,123 @@ APP_DIR = os.path.dirname(os.path.abspath(__file__))
 USER_STRAT_DIR = os.path.join(APP_DIR, "user_strategies")
 os.makedirs(USER_STRAT_DIR, exist_ok=True)
 
-NAMESPACE_EXTRA = {
-    "pd": pd, "np": np, "sma": sma, "ema": ema, "rsi": rsi,
-    "macd": macd, "bollinger": bollinger, "atr": atr, "roc": roc,
+_QS_CURRENT = {}
+
+
+def _qs_param(name, default):
+    return _QS_CURRENT.get(name, default)
+
+
+def _period(label, default, mn=2, mx=400):
+    return {"label": label, "type": "int", "min": mn, "max": mx, "step": 1, "default": default}
+
+
+def _float(label, default, mn=0.5, mx=6.0, step=0.1):
+    return {"label": label, "type": "float", "min": mn, "max": mx, "step": step, "default": default}
+
+
+INDICATOR_SPECS = {
+    "sma": {"args": ["n"], "meta": {"n": _period("SMA 週期", 20)}},
+    "ema": {"args": ["n"], "meta": {"n": _period("EMA 週期", 20)}},
+    "wma": {"args": ["n"], "meta": {"n": _period("WMA 週期", 20)}},
+    "rma": {"args": ["n"], "meta": {"n": _period("RMA 週期", 14)}},
+    "dema": {"args": ["n"], "meta": {"n": _period("DEMA 週期", 20)}},
+    "hma": {"args": ["n"], "meta": {"n": _period("HMA 週期", 20)}},
+    "stdev": {"args": ["n"], "meta": {"n": _period("標準差 週期", 20)}},
+    "zscore": {"args": ["n"], "meta": {"n": _period("Z分數 週期", 20)}},
+    "rsi": {"args": ["n"], "meta": {"n": _period("RSI 週期", 14, 2, 100)}},
+    "roc": {"args": ["n"], "meta": {"n": _period("ROC 週期", 20)}},
+    "mom": {"args": ["n"], "meta": {"n": _period("動量 週期", 10, 1, 400)}},
+    "trix": {"args": ["n"], "meta": {"n": _period("TRIX 週期", 15)}},
+    "macd": {"args": ["fast", "slow", "signal"], "meta": {"fast": _period("MACD 快線週期", 12, 2, 200), "slow": _period("MACD 慢線週期", 26, 3, 400), "signal": _period("MACD 訊號週期", 9, 2, 100)}},
+    "ppo": {"args": ["fast", "slow", "signal"], "meta": {"fast": _period("PPO 快線週期", 12, 2, 200), "slow": _period("PPO 慢線週期", 26, 3, 400), "signal": _period("PPO 訊號週期", 9, 2, 100)}},
+    "bollinger": {"args": ["n", "k"], "meta": {"n": _period("布林 週期", 20), "k": _float("布林 標準差倍數", 2.0, 0.5, 6.0)}},
+    "tr": {"args": [], "meta": {}},
+    "atr": {"args": ["n"], "meta": {"n": _period("ATR 週期", 14)}},
+    "natr": {"args": ["n"], "meta": {"n": _period("NATR 週期", 14)}},
+    "dmi": {"args": ["n"], "meta": {"n": _period("DMI 週期", 14)}},
+    "adx": {"args": ["n"], "meta": {"n": _period("ADX 週期", 14)}},
+    "cci": {"args": ["n"], "meta": {"n": _period("CCI 週期", 20)}},
+    "mfi": {"args": ["n"], "meta": {"n": _period("MFI 週期", 14)}},
+    "willr": {"args": ["n"], "meta": {"n": _period("威廉 週期", 14)}},
+    "obv": {"args": [], "meta": {}},
+    "vwap": {"args": ["n"], "meta": {"n": _period("VWAP 週期", 20)}},
+    "vwma": {"args": ["n"], "meta": {"n": _period("VWMA 週期", 20)}},
+    "cmf": {"args": ["n"], "meta": {"n": _period("CMF 週期", 20)}},
+    "kdj": {"args": ["n", "m1", "m2"], "meta": {"n": _period("KDJ 週期", 9, 2, 100), "m1": _period("KDJ 平滑K", 3, 1, 20), "m2": _period("KDJ 平滑D", 3, 1, 20)}},
+    "stoch": {"args": ["n", "m1", "m2"], "meta": {"n": _period("STOCH 週期", 14, 2, 100), "m1": _period("STOCH 平滑K", 3, 1, 20), "m2": _period("STOCH 平滑D", 3, 1, 20)}},
+    "aroon": {"args": ["n"], "meta": {"n": _period("Aroon 週期", 25, 2, 200)}},
+    "donchian": {"args": ["n"], "meta": {"n": _period("Donchian 週期", 20)}},
+    "ao": {"args": ["fast", "slow"], "meta": {"fast": _period("AO 快線週期", 5, 2, 200), "slow": _period("AO 慢線週期", 34, 3, 400)}},
 }
+
+NAMESPACE_EXTRA = {"pd": pd, "np": np, "_qs_param": _qs_param}
+for _name in INDICATOR_SPECS:
+    NAMESPACE_EXTRA[_name] = getattr(ind, _name)
+
+
+class _IndicatorBinder(ast.NodeTransformer):
+    def __init__(self):
+        self.defs = {}
+
+    @staticmethod
+    def _is_num(node):
+        return isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
+
+    @staticmethod
+    def _wrap(key, val):
+        return ast.Call(func=ast.Name(id="_qs_param", ctx=ast.Load()),
+                        args=[ast.Constant(value=key), val], keywords=[])
+
+    def _default_node(self, key, meta):
+        return ast.Call(func=ast.Name(id="_qs_param", ctx=ast.Load()),
+                        args=[ast.Constant(value=key), ast.Constant(value=meta.get("default"))], keywords=[])
+
+    def visit_Call(self, node):
+        self.generic_visit(node)
+        fn = node.func
+        if not (isinstance(fn, ast.Name) and fn.id in INDICATOR_SPECS):
+            return node
+        spec = INDICATOR_SPECS[fn.id]
+        names = spec["args"]
+        meta = spec["meta"]
+        provided = set()
+        for i, arg in enumerate(node.args):
+            if i == 0:
+                continue
+            pname = names[i - 1] if i - 1 < len(names) else None
+            if pname:
+                provided.add(pname)
+                if self._is_num(arg):
+                    key = f"{fn.id}__{pname}"
+                    self.defs[key] = meta.get(pname, {})
+                    node.args[i] = self._wrap(key, arg)
+        for kw in node.keywords:
+            if kw.arg in names:
+                provided.add(kw.arg)
+                if self._is_num(kw.value):
+                    key = f"{fn.id}__{kw.arg}"
+                    self.defs[key] = meta.get(kw.arg, {})
+                    kw.value = self._wrap(key, kw.value)
+        missing = [p for p in names if p not in provided]
+        for p in missing:
+            key = f"{fn.id}__{p}"
+            self.defs[key] = meta.get(p, {})
+            node_ = self._default_node(key, meta.get(p, {}))
+            if node.keywords:
+                node.keywords.append(ast.keyword(arg=p, value=node_))
+            else:
+                node.args.append(node_)
+        return node
+
+
+def _bind_indicators(code):
+    tree = ast.parse(code)
+    binder = _IndicatorBinder()
+    tree = binder.visit(tree)
+    ast.fix_missing_locations(tree)
+    return compile(tree, "<custom_strategy>", "exec"), binder.defs
+
 
 TEMPLATE = '''import pandas as pd
 import numpy as np
@@ -67,18 +181,26 @@ def load_df(symbol, interval, start, end, refresh, source):
 
 def exec_custom(code):
     ns = dict(NAMESPACE_EXTRA)
-    exec(compile(code, "<custom_strategy>", "exec"), ns)
+    compiled, auto = _bind_indicators(code)
+    ns["__QS_INDICATOR_DEFS__"] = auto
+    exec(compiled, ns)
     return ns
 
 
 def param_defs(ns):
-    pd_defs = ns.get("PARAM_DEFS")
-    if isinstance(pd_defs, dict) and pd_defs:
-        return pd_defs
-    return None
+    user = ns.get("PARAM_DEFS")
+    user = user if isinstance(user, dict) else {}
+    auto = ns.get("__QS_INDICATOR_DEFS__", {}) or {}
+    merged = dict(user)
+    for k, v in auto.items():
+        if k not in merged:
+            merged[k] = v
+    return merged or None
 
 
 def call_generate(ns, df, params):
+    global _QS_CURRENT
+    _QS_CURRENT = params or {}
     fn = ns.get("generate")
     if not callable(fn):
         raise ValueError("程式碼需定義 generate(df, params) 或 generate(df) 函式")
