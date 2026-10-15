@@ -1376,7 +1376,7 @@ function optBuildParams() {
   const defs = state.paramDefs || {};
   const keys = Object.keys(defs).filter((k) => defs[k].type === "int" || defs[k].type === "float");
   const box = $("#opt-params");
-  const sig = keys.join("|");
+  const sig = keys.map((k) => `${k}:${defs[k].default}`).join("|");
   if (state._optSig === sig && box.children.length) return;
   state._optSig = sig;
   box.innerHTML = "";

@@ -139,14 +139,18 @@ class _IndicatorBinder(ast.NodeTransformer):
                 provided.add(pname)
                 if self._is_num(arg):
                     key = self._next(f"{fn.id}__{pname}")
-                    self.defs[key] = self._meta_for(fn.id, pname, key)
+                    meta = self._meta_for(fn.id, pname, key)
+                    meta["default"] = arg.value
+                    self.defs[key] = meta
                     node.args[i] = self._wrap(key, arg)
         for kw in node.keywords:
             if kw.arg in names:
                 provided.add(kw.arg)
                 if self._is_num(kw.value):
                     key = self._next(f"{fn.id}__{kw.arg}")
-                    self.defs[key] = self._meta_for(fn.id, kw.arg, key)
+                    meta = self._meta_for(fn.id, kw.arg, key)
+                    meta["default"] = kw.value.value
+                    self.defs[key] = meta
                     kw.value = self._wrap(key, kw.value)
         for p in [p for p in names if p not in provided]:
             key = self._next(f"{fn.id}__{p}")
