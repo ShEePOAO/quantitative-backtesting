@@ -242,7 +242,7 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
 .dd.lang-dd .dd-label { flex: 1; }
 .dd.lang-dd .dd-menu { left: auto; right: 0; min-width: 190px; }
 .dd.lang-dd .lang-soon { margin-left: 6px; font-size: 10.5px; font-weight: 600; color: var(--ink-3); }
-.dd.lang-dd .dd-menu button.is-sel .lang-soon { color: var(--accent-ink); opacity: .8; }
+.dd.lang-dd .dd-menu button.is-sel .lang-soon { color: var(--ink-3); opacity: .9; }
 
 /* ---------- workbench grid ---------- */
 .workbench {
@@ -611,10 +611,10 @@ td.num, th.num { text-align: right; font-family: var(--mono); }
 .combo input { width: 100%; }
 .combo-menu { position: absolute; z-index: 50; top: calc(100% + 4px); left: 0; right: 0; max-height: 264px; overflow: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 4px; }
 .combo-menu button { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 7px 9px; font-family: var(--font); font-size: 13px; color: var(--ink); cursor: pointer; }
-.combo-menu button:hover, .combo-menu button.is-active { background: var(--accent); color: var(--accent-ink); }
+.combo-menu button:hover, .combo-menu button.is-active { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
 .combo-menu .sym { font-family: var(--mono); font-weight: 600; }
 .combo-menu .lbl { color: var(--ink-3); font-size: 12px; }
-.combo-menu button:hover .lbl, .combo-menu button.is-active .lbl { color: rgba(255, 255, 255, .82); }
+.combo-menu button:hover .lbl, .combo-menu button.is-active .lbl { color: var(--ink-2); }
 .combo-menu .empty { padding: 9px; color: var(--ink-3); font-size: 12.5px; }
 
 /* ---------- dual range (date) ---------- */
@@ -945,8 +945,9 @@ input[type="range"].mix::-moz-range-thumb {
 .dd.open .dd-menu { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .dd-menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 5px; padding: 8px 10px; font-family: var(--font); font-size: 13px; color: var(--ink); cursor: pointer; opacity: 0; transform: translateY(-4px); }
 .dd.open .dd-menu button { animation: dd-item .24s cubic-bezier(.2, .7, .2, 1) forwards; animation-delay: calc(var(--i, 0) * 28ms); }
-.dd-menu button:hover, .dd-menu button.is-sel { background: var(--accent); color: var(--accent-ink); }
-.dd-menu button.is-sel { font-weight: 600; }
+.dd-menu button:hover, .dd-menu button.is-sel { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
+.dd-menu button:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+.dd-menu button.is-sel { font-weight: 600; background: color-mix(in srgb, var(--ink) 13%, transparent); }
 @keyframes dd-item { to { opacity: 1; transform: translateY(0); } }
 
 /* ---------- responsive ---------- */
