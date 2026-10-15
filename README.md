@@ -1,10 +1,10 @@
 # Quant Studio
 
-> **不確定怎麼用？直接問 AI 就對了。**
-> 把這份專案（或 `docs/使用手冊.md`）交給 AI，連同你想做的事一起描述，它就能幫你寫策略、加指標、調參數。建議搭配 **DeepSeek API**，成本較低。
+> **不會開啟／執行這個程式？直接問 AI 就對了。**
+> 把這個專案交給 AI，並描述你的問題（例如「這是什麼？我要怎麼在我的電腦上把它跑起來？」），它會一步步帶你安裝與啟動。想改功能、寫策略也可以一併問。建議搭配 **DeepSeek API**，成本較低。
 >
-> **Not sure how to use it? Just ask an AI.**
-> Hand this project (or `docs/使用手冊.md`) to an AI and describe what you want — it will write strategies, add indicators and tune parameters for you. **DeepSeek API** recommended (cheaper).
+> **Don't know how to run it? Just ask an AI.**
+> Hand this project to an AI and describe your problem (e.g. "what is this? how do I run it on my computer?") — it will walk you through installing and launching step by step. You can also ask it to add features or write strategies. **DeepSeek API** recommended (cheaper).
 
 A browser-based quant **backtesting workbench**. Write trading strategies in Python, run honest backtests, and inspect performance, equity, drawdown, trades and per-asset stats. Standalone rewrite of the "custom strategy" page of another backtesting tool.
 
