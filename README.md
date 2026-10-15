@@ -54,6 +54,7 @@ On Windows you can also double-click `start.bat`.
 ### Data
 
 - A small set of **daily historical data** is bundled in `data/cache/`: BTC, ETH, SOL, XRP, BNB (plus 12h for BTC/SOL) and NVDA, GOOGL, COIN. Clone it and run with **Local CSV + Daily** to try it right away.
+- Also bundled in `data/import_csv/` (**daily + hourly**) for 12 common stocks: `2330 0050 2317 2454 2308 2303` (Taiwan) and `AAPL AMZN TSLA AMD TSM AVGO` (US) — so they work out of the box at 1h/4h/6h/12h/1d/1w.
 - Provide your own market CSV: `data/import_csv/<SYMBOL>.csv`, or point `QUANT_IMPORT_DIR` at an existing folder.
 - **Stocks (Taiwan + US)**: run `python update_stocks.py` (yfinance) to fetch **daily + hourly** into your import dir. It covers common TW names (2330 TSMC, 0050, 2317, 2454, …) and US names (AAPL, MSFT, NVDA, TSLA, TSM, …); `python update_stocks.py 2330 TSLA` updates only those. `python update_stocks.py --list` lists all.
 - Format: `DateTime,Open,High,Low,Close,Volume` (intraday or daily; the app resamples as needed).
@@ -118,6 +119,7 @@ Windows 也可直接雙擊 `start.bat`。
 ### 資料
 
 - 附帶一批**日線歷史資料**（在 `data/cache/`）：BTC、ETH、SOL、XRP、BNB（另有 BTC/SOL 的 12h）與 NVDA、GOOGL、COIN。clone 後選「本地 CSV ＋ 日線」即可直接回測。
+- 另附 12 檔常見股票的**日線＋小時**資料（在 `data/import_csv/`）：台股 `2330 0050 2317 2454 2308 2303`、美股 `AAPL AMZN TSLA AMD TSM AVGO`——clone 後 1h/4h/6h/12h/1d/1w 都能直接跑。
 - 也可自備行情 CSV：放到 `data/import_csv/<SYMBOL>.csv`，或以環境變數 `QUANT_IMPORT_DIR` 指向既有資料夾。
 - **股票（台股＋美股）**：執行 `python update_stocks.py`（yfinance）會抓**日線＋小時**到你指定的資料夾。涵蓋常見台股（2330 台積電、0050、2317、2454…）與美股（AAPL、MSFT、NVDA、TSLA、TSM…）；`python update_stocks.py 2330 TSLA` 只更新指定幾檔、`--list` 列出全部。
 - 格式：`DateTime,Open,High,Low,Close,Volume`（分鐘或日線皆可，程式會視需要重採樣）。

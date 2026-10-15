@@ -12,6 +12,10 @@ from config import ASSETS, STOCK_SYMBOLS
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(BASE_DIR, "data", "cache")
 IMPORT_DIR = os.environ.get("QUANT_IMPORT_DIR", r"C:\crypto-backtester\data\import_csv")
+BUNDLED_IMPORT_DIR = os.path.join(BASE_DIR, "data", "import_csv")
+IMPORT_DIRS = [IMPORT_DIR]
+if os.path.abspath(BUNDLED_IMPORT_DIR) != os.path.abspath(IMPORT_DIR):
+    IMPORT_DIRS.append(BUNDLED_IMPORT_DIR)
 os.makedirs(CACHE_DIR, exist_ok=True)
 os.makedirs(IMPORT_DIR, exist_ok=True)
 
@@ -31,17 +35,19 @@ OHLCV_AGG = {"open": "first", "high": "max", "low": "min", "close": "last", "vol
 
 
 def import_available(symbol):
-    return os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv"))
+    return any(os.path.exists(os.path.join(d, f"{symbol}.csv")) for d in IMPORT_DIRS)
 
 
 _IV_RANK = {"5m": 0, "15m": 1, "30m": 2, "1h": 3, "4h": 4, "6h": 5, "12h": 6, "1d": 7, "1w": 8}
 
 
 def _native_rank(symbol):
-    if os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}_1h.csv")):
-        return _IV_RANK["1h"]
-    if os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv")):
-        return _IV_RANK["1d"] if symbol in STOCK_SYMBOLS else _IV_RANK["5m"]
+    for d in IMPORT_DIRS:
+        if os.path.exists(os.path.join(d, f"{symbol}_1h.csv")):
+            return _IV_RANK["1h"]
+    for d in IMPORT_DIRS:
+        if os.path.exists(os.path.join(d, f"{symbol}.csv")):
+            return _IV_RANK["1d"] if symbol in STOCK_SYMBOLS else _IV_RANK["5m"]
     return None
 
 
@@ -187,14 +193,22 @@ def _get_binance(symbol, interval, start, end, refresh):
 SUBDaily_INTERVALS = {"5m", "15m", "30m", "1h", "4h", "6h", "12h"}
 
 
+def _import_path(symbol, interval=None):
+    for d in IMPORT_DIRS:
+        if interval in SUBDaily_INTERVALS:
+            p = os.path.join(d, f"{symbol}_1h.csv")
+            if os.path.exists(p):
+                return p
+        p = os.path.join(d, f"{symbol}.csv")
+        if os.path.exists(p):
+            return p
+    return None
+
+
 def _read_import_raw(symbol, interval=None):
-    path = os.path.join(IMPORT_DIR, f"{symbol}.csv")
-    if interval in SUBDaily_INTERVALS:
-        _fine = os.path.join(IMPORT_DIR, f"{symbol}_1h.csv")
-        if os.path.exists(_fine):
-            path = _fine
-    if not os.path.exists(path):
-        raise ValueError(f"找不到 {symbol} 的 CSV 檔案：{path}")
+    path = _import_path(symbol, interval)
+    if path is None:
+        raise ValueError(f"找不到 {symbol} 的 CSV 檔案（{IMPORT_DIRS}）")
     df = pd.read_csv(path, index_col=0)
     df.index = pd.to_datetime(df["DateTime"])
     df = df.drop(columns=["DateTime"])

@@ -6,8 +6,32 @@ __pycache__/
 venv/
 env/
 
-# Source import data (user-provided; may be large)
-data/import_csv/
+# Source import data (user-provided; may be large) — only the bundled sample is tracked
+data/import_csv/*
+!data/import_csv/2330.csv
+!data/import_csv/2330_1h.csv
+!data/import_csv/0050.csv
+!data/import_csv/0050_1h.csv
+!data/import_csv/2317.csv
+!data/import_csv/2317_1h.csv
+!data/import_csv/2454.csv
+!data/import_csv/2454_1h.csv
+!data/import_csv/2308.csv
+!data/import_csv/2308_1h.csv
+!data/import_csv/2303.csv
+!data/import_csv/2303_1h.csv
+!data/import_csv/AAPL.csv
+!data/import_csv/AAPL_1h.csv
+!data/import_csv/AMZN.csv
+!data/import_csv/AMZN_1h.csv
+!data/import_csv/TSLA.csv
+!data/import_csv/TSLA_1h.csv
+!data/import_csv/AMD.csv
+!data/import_csv/AMD_1h.csv
+!data/import_csv/TSM.csv
+!data/import_csv/TSM_1h.csv
+!data/import_csv/AVGO.csv
+!data/import_csv/AVGO_1h.csv
 
 # Data cache: ship only a small bundled sample, ignore the rest
 data/cache/*
