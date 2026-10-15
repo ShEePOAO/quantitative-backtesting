@@ -349,7 +349,7 @@ select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg x
 .sub-block[open] > summary { margin-bottom: 12px; }
 
 /* ---------- editor ---------- */
-.filebar { display: flex; gap: 8px; margin-bottom: 10px; }
+.filebar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .filebar select { flex: 1; }
 .editor-wrap { border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: var(--field); }
 .editor-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(30,58,95,.12); }
@@ -631,7 +631,7 @@ input[type="range"].mix::-moz-range-thumb { border: 0; width: 15px; height: 15px
 
 /* ---------- 放大編輯鈕 + 彈窗 ---------- */
 .expand-btn {
-  position: absolute; top: 12px; right: 0; width: 30px; height: 30px;
+  margin-left: auto; flex: none; width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink-2);
   cursor: pointer; transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .1s ease;
