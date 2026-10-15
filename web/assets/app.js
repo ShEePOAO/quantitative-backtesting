@@ -382,12 +382,13 @@ function setupDual() {
 }
 function updateContext() {
   if (!state.meta) return;
-  const src = $("#source").value === "csv" ? "CSV" : "API";
-  const iv = $("#interval").value;
-  if (state.mode === "single") {
-    $("#context").textContent = `${src} · ${$("#symbol").value} · ${iv}`;
-  } else {
-    $("#context").textContent = `${src} · ${state.selected.size} 幣 · ${iv}`;
+  const ctx = $("#context");
+  if (ctx) {
+    const src = $("#source").value === "csv" ? "CSV" : "API";
+    const iv = $("#interval").value;
+    ctx.textContent = state.mode === "single"
+      ? `${src} · ${$("#symbol").value} · ${iv}`
+      : `${src} · ${state.selected.size} 幣 · ${iv}`;
   }
   checkIntervalAvail();
 }
