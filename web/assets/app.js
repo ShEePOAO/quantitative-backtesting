@@ -1496,7 +1496,7 @@ function renderOptResult(o) {
   out.innerHTML = "";
   const MKEY = { sharpe: "夏普", total_return: "總收益", cagr: "年化", max_drawdown: "回撤", calmar: "卡瑪", profit_factor: "盈虧比", win_rate: "勝率" };
   const metric = o.metric, mlabel = MKEY[metric] || metric, keys = o.keys;
-  const asc = metric === "max_drawdown";
+  const asc = false;
   const hasOOS = !!o.split && o.rows.some((r) => r.oos);
   const pick = (src) => o.rows.filter((r) => (src === "oos" ? r.oos && r.oos[metric] != null : r.metrics[metric] != null))
     .slice().sort((a, b) => { const x = src === "oos" ? a.oos[metric] : a.metrics[metric]; const y = src === "oos" ? b.oos[metric] : b.metrics[metric]; return asc ? x - y : y - x; })[0];
@@ -1556,7 +1556,7 @@ function renderOptResult(o) {
   });
   table.appendChild(tb);
   const tw = el("div", { class: "tablewrap" }); tw.appendChild(table); out.appendChild(tw);
-  out.appendChild(el("p", { class: "hint", text: `${T("指標")}：${mlabel}${asc ? T("（越小越好）") : T("（越大越好）")}；${T("顯示前")} ${sorted.length} ${T("名。找穩定高原而非單一尖峰。")}` }));
+  out.appendChild(el("p", { class: "hint", text: `${T("指標")}：${mlabel}${metric === "max_drawdown" ? T("（回撤幅度越小越好）") : T("（越大越好）")}；${T("顯示前")} ${sorted.length} ${T("名。找穩定高原而非單一尖峰。")}` }));
 }
 
 /* ---------- drag-to-scrub numbers ---------- */

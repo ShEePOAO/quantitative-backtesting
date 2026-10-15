@@ -109,6 +109,7 @@
     "指標：": "Metric: ",
     "（越大越好）": " (higher is better)",
     "（越小越好）": " (lower is better)",
+    "（回撤幅度越小越好）": " (smaller drawdown is better)",
     "指標": "Metric",
     "過擬合提醒": "Overfitting warning",
     "參數優化是對歷史資料做『事後最佳化』，很容易過擬合。請優先找穩定高原，而不是單一尖峰。": "Parameter optimization is hindsight-optimizing history and easily overfits. Prefer a stable plateau, not a single spike.",
