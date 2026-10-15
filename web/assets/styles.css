@@ -427,8 +427,6 @@ textarea#code:focus { outline: none; }
 .cell { position: relative; padding: 14px 16px 15px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: background-color .15s ease; }
 .cell:hover { background: var(--surface-2); }
 .cell:last-child { border-right: 0; }
-.cell::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 2px; background: var(--accent); opacity: .55; transform: scaleX(0); transform-origin: left center; transition: transform .32s cubic-bezier(.2, .7, .2, 1); }
-.cell:hover::after { transform: scaleX(1); }
 .cell .k { font-size: 11px; letter-spacing: .05em; color: var(--ink-3); margin-bottom: 7px; white-space: nowrap; }
 .cell .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 21px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
 .cell .v.up { color: var(--up); }
