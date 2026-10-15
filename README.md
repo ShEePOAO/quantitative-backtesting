@@ -16,11 +16,11 @@ A browser-based quant **backtesting workbench**. Write trading strategies in Pyt
 
 **Start screen** — write a strategy, pick asset / interval / range:
 
-![Start screen](docs/screenshots/start.png)
+![Start screen](docs/screenshots/screenshot-start.png)
 
 **Backtest result** — metrics, equity curve, drawdown, trades:
 
-![Backtest result](docs/screenshots/result.png)
+![Backtest result](docs/screenshots/screenshot-result.png)
 
 ---
 
