@@ -858,7 +858,7 @@ function plotGrow(sel, traces, layout) {
     return t;
   });
   Plotly.newPlot(gd, init, lay, PLOT_CONFIG);
-  const t0 = performance.now(), DUR = 800, ease = (p) => 1 - Math.pow(1 - p, 3);
+  const t0 = performance.now(), DUR = 1200, ease = (p) => 1 - Math.pow(1 - p, 3);
   const frame = (now) => {
     const p = Math.min(1, (now - t0) / DUR), e = ease(p);
     const xs = [], ys = [];
