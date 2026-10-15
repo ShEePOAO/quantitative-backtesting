@@ -453,6 +453,9 @@ function renderStrategyFlags(f) {
   });
   box.appendChild(wrap2);
 }
+function loaderHTML(text) {
+  return `<div class="load-view"><div class="load-creature"></div><p class="loader-text">${text}</p></div>`;
+}
 function renderParams(defs) {
   const wrap = $("#params");
   const grp = $("#params-grp");
@@ -1420,7 +1423,7 @@ async function optRun() {
   };
   const btn = $("#opt-run");
   btn.disabled = true; setStatus("busy", "優化中…");
-  $("#opt-output").innerHTML = '<div class="sk sk-block"></div>';
+  $("#opt-output").innerHTML = loaderHTML(T("優化中…"));
   try {
     const res = await fetch("/api/optimize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) { let d = null; try { d = await res.json(); } catch (e) { /* ignore */ } throw Object.assign(new Error((d && d.error) || `HTTP ${res.status}`), { detail: d && d.detail }); }
