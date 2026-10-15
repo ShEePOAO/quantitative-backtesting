@@ -218,3 +218,237 @@ def ao(df, fast=5, slow=34):
     fast, slow = int(fast), int(slow)
     med = (df["high"] + df["low"]) / 2
     return med.rolling(fast).mean() - med.rolling(slow).mean()
+
+
+def tema(series, n=20):
+    n = int(n)
+    e1 = series.ewm(span=n, adjust=False).mean()
+    e2 = e1.ewm(span=n, adjust=False).mean()
+    e3 = e2.ewm(span=n, adjust=False).mean()
+    return 3 * e1 - 3 * e2 + e3
+
+
+def kama(series, n=10, fast=2, slow=30):
+    n, fast, slow = int(n), int(fast), int(slow)
+    change = series.diff(n).abs()
+    vol = series.diff().abs().rolling(n).sum()
+    er = change / vol.replace(0, np.nan)
+    sc = (er * (2 / (fast + 1) - 2 / (slow + 1)) + 2 / (slow + 1)) ** 2
+    base = (2 / (slow + 1)) ** 2
+    vals = []
+    prev = series.iloc[0]
+    for i in range(len(series)):
+        s = sc.iloc[i]
+        if not np.isfinite(s):
+            s = base
+        prev = prev + s * (series.iloc[i] - prev)
+        vals.append(prev)
+    return pd.Series(vals, index=series.index)
+
+
+def linreg(series, n=14):
+    n = int(n)
+    x = np.arange(n)
+    xm = x.mean()
+    denom = ((x - xm) ** 2).sum()
+
+    def _slope(y):
+        return ((x - xm) * (y - y.mean())).sum() / denom
+
+    return series.rolling(n).apply(_slope, raw=True)
+
+
+def medprice(df):
+    return (df["high"] + df["low"]) / 2
+
+
+def typprice(df):
+    return (df["high"] + df["low"] + df["close"]) / 3
+
+
+def wclprice(df):
+    return (df["high"] + df["low"] + 2 * df["close"]) / 4
+
+
+def midpoint(series, n=14):
+    n = int(n)
+    return (series.rolling(n).max() + series.rolling(n).min()) / 2
+
+
+def bias(series, n=20):
+    n = int(n)
+    m = series.rolling(n).mean()
+    return (series - m) / m.replace(0, np.nan) * 100
+
+
+def dpo(series, n=20):
+    n = int(n)
+    return series - series.rolling(n).mean().shift(n // 2 + 1)
+
+
+def cmo(series, n=14):
+    n = int(n)
+    d = series.diff()
+    up = d.clip(lower=0).rolling(n).sum()
+    dn = (-d.clip(upper=0)).rolling(n).sum()
+    return (up - dn) / (up + dn).replace(0, np.nan) * 100
+
+
+def bop(df):
+    rng = (df["high"] - df["low"]).replace(0, np.nan)
+    return (df["close"] - df["open"]) / rng
+
+
+def uo(df, fast=7, mid=14, slow=28):
+    fast, mid, slow = int(fast), int(mid), int(slow)
+    bp = df["close"] - pd.concat([df["low"], df["close"].shift()], axis=1).min(axis=1)
+    tr_ = tr(df)
+
+    def _avg(n):
+        return bp.rolling(n).sum() / tr_.rolling(n).sum().replace(0, np.nan)
+
+    return 100 * (4 * _avg(fast) + 2 * _avg(mid) + _avg(slow)) / 7
+
+
+def tsi(df, long=25, short=13):
+    long, short = int(long), int(short)
+    m = df["close"].diff()
+    num = ema(ema(m, long), short)
+    den = ema(ema(m.abs(), long), short)
+    return num / den.replace(0, np.nan) * 100
+
+
+def fi(df, n=13):
+    return (df["close"].diff() * df["volume"]).ewm(span=int(n), adjust=False).mean()
+
+
+def eom(df, n=14):
+    n = int(n)
+    mid = ((df["high"] + df["low"]) / 2).diff()
+    box = (df["volume"] / 1e6) / (df["high"] - df["low"]).replace(0, np.nan)
+    return (mid / box).rolling(n).mean()
+
+
+def supertrend(df, n=10, mult=3.0):
+    n = int(n)
+    atrv = atr(df, n)
+    hl2 = (df["high"] + df["low"]) / 2
+    upper = hl2 + mult * atrv
+    lower = hl2 - mult * atrv
+    close = df["close"]
+    fub = upper.to_numpy(dtype=float, copy=True)
+    flb = lower.to_numpy(dtype=float, copy=True)
+    c = close.to_numpy(dtype=float)
+    st = np.full(len(df), np.nan)
+    trend = np.ones(len(df), dtype=int)
+    for i in range(1, len(df)):
+        if np.isfinite(upper.iat[i]):
+            if not (upper.iat[i] < fub[i - 1] or c[i - 1] > fub[i - 1]):
+                fub[i] = fub[i - 1]
+            if not (lower.iat[i] > flb[i - 1] or c[i - 1] < flb[i - 1]):
+                flb[i] = flb[i - 1]
+            if c[i] > fub[i]:
+                trend[i] = 1
+            elif c[i] < flb[i]:
+                trend[i] = -1
+            else:
+                trend[i] = trend[i - 1]
+            st[i] = flb[i] if trend[i] == 1 else fub[i]
+    return pd.Series(st, index=df.index), pd.Series(trend, index=df.index)
+
+
+def psar(df, af=0.02, maxaf=0.2):
+    high = df["high"].to_numpy(dtype=float)
+    low = df["low"].to_numpy(dtype=float)
+    n = len(df)
+    out = np.full(n, np.nan)
+    if n < 2:
+        return pd.Series(out, index=df.index)
+    bull = True
+    ep = high[0]
+    sar = low[0]
+    acc = af
+    out[0] = sar
+    for i in range(1, n):
+        sar = sar + acc * (ep - sar)
+        if bull:
+            if low[i] < sar:
+                bull = False
+                sar = ep
+                ep = low[i]
+                acc = af
+            else:
+                if high[i] > ep:
+                    ep = high[i]
+                    acc = min(acc + af, maxaf)
+                sar = min(sar, low[i - 1], low[i - 2] if i >= 2 else low[i - 1])
+        else:
+            if high[i] > sar:
+                bull = True
+                sar = ep
+                ep = high[i]
+                acc = af
+            else:
+                if low[i] < ep:
+                    ep = low[i]
+                    acc = min(acc + af, maxaf)
+                sar = max(sar, high[i - 1], high[i - 2] if i >= 2 else high[i - 1])
+        out[i] = sar
+    return pd.Series(out, index=df.index)
+
+
+def keltner(df, n=20, mult=2.0):
+    mid = ema(df["close"], int(n))
+    r = atr(df, int(n))
+    return mid, mid + mult * r, mid - mult * r
+
+
+def stochrsi(close, n=14, k=3):
+    n, k = int(n), int(k)
+    r = rsi(close, n)
+    ll = r.rolling(n).min()
+    hh = r.rolling(n).max()
+    s = (r - ll) / (hh - ll).replace(0, np.nan) * 100
+    return s.rolling(k).mean()
+
+
+def pvo(df, fast=12, slow=26, signal=9):
+    fast, slow, signal = int(fast), int(slow), int(signal)
+    v = df["volume"]
+    line = (ema(v, fast) - ema(v, slow)) / ema(v, slow).replace(0, np.nan) * 100
+    sig = line.ewm(span=signal, adjust=False).mean()
+    return line, sig, line - sig
+
+
+def nvi(df):
+    ret = df["close"].pct_change()
+    sign = np.where(ret > 0, 1.0, np.where(ret < 0, 0.0, 1.0))
+    return 1000 * (1 + sign * ret).cumprod()
+
+
+def pvi(df):
+    ret = df["close"].pct_change()
+    volchg = df["volume"].diff()
+    sign = np.where(volchg > 0, 1.0, np.where(volchg < 0, 0.0, 1.0))
+    return 1000 * (1 + sign * ret).cumprod()
+
+
+def rvi(df, n=10):
+    n = int(n)
+    num = (df["close"] - df["open"]).rolling(n).mean()
+    den = (df["high"] - df["low"]).rolling(n).mean()
+    return num / den.replace(0, np.nan)
+
+
+def hh(df, n=20):
+    return df["high"].rolling(int(n)).max()
+
+
+def ll(df, n=20):
+    return df["low"].rolling(int(n)).min()
+
+
+def aroonosc(df, n=25):
+    up, dn = aroon(df, n)
+    return up - dn
+
