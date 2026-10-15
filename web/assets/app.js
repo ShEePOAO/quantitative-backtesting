@@ -1514,7 +1514,7 @@ function drawOptChart(wrap, o, keys, metric, mlabel, view, hasOOS) {
     const ys = o.rows.map(get);
     const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", line: { color: cssv("--chart-line"), width: 1.8 }, marker: { size: 6 }, hovertemplate: `%{x} → %{y:${mfmt}}<extra></extra>` };
     const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: mlabel }; layout.yaxis.tickformat = mfmt;
-    Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
+    plotGrow(wrap, [trace], layout);
   }
 }
 function neighborAvgMap(rows, keys, metric) {
