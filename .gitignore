@@ -6,9 +6,21 @@ __pycache__/
 venv/
 env/
 
-# Data cache (generated from source data)
-data/cache/
+# Source import data (user-provided; may be large)
 data/import_csv/
+
+# Data cache: ship only a small bundled sample, ignore the rest
+data/cache/*
+!data/cache/BTC_1d_import.csv
+!data/cache/BTC_12h_import.csv
+!data/cache/ETH_1d_import.csv
+!data/cache/SOL_1d_import.csv
+!data/cache/SOL_12h_import.csv
+!data/cache/XRP_1d_import.csv
+!data/cache/BNB_1d_import.csv
+!data/cache/NVDA_1d_import.csv
+!data/cache/GOOGL_1d_import.csv
+!data/cache/COIN_1d_import.csv
 
 # Live trading state / logs
 live_state*.json
