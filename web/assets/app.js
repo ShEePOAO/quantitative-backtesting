@@ -185,8 +185,8 @@ function openCodeModal() {
   modalEditor.setValue(state.editor ? state.editor.getValue() : "");
   const m = $("#code-modal");
   m.hidden = false;
-  requestAnimationFrame(() => m.classList.add("open"));
-  setTimeout(() => { modalEditor.refresh(); modalEditor.focus(); }, 80);
+  requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add("open")));
+  setTimeout(() => { modalEditor.refresh(); modalEditor.focus(); }, 130);
 }
 function closeCodeModal() {
   const m = $("#code-modal");
