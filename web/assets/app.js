@@ -1075,8 +1075,8 @@ const METRIC_TIPS = {
   n_trades: "已平倉交易筆數",
 };
 function countUp(node, key, val) {
-  if (val == null || !isFinite(val) || prefersReduced()) { node.textContent = fmt(key, val); return; }
-  const dur = 450; const t0 = performance.now();
+  if (val == null || !isFinite(val)) { node.textContent = fmt(key, val); return; }
+  const dur = 650; const t0 = performance.now();
   (function step(t) {
     const p = Math.min(1, (t - t0) / dur);
     const e = 1 - Math.pow(1 - p, 3);
@@ -1086,8 +1086,7 @@ function countUp(node, key, val) {
 }
 function wipeEl(sel) {
   const n = $(sel); if (!n) return;
-  n.classList.remove("wipe"); void n.offsetWidth;
-  if (!prefersReduced()) n.classList.add("wipe");
+  n.classList.remove("wipe"); void n.offsetWidth; n.classList.add("wipe");
 }
 function updateSubnavInd() {
   const ind = $("#subnav-ind");
