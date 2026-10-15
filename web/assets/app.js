@@ -16,7 +16,7 @@ const READOUT_KEYS = ["total_return", "cagr", "sharpe", "calmar", "max_drawdown"
 const PER_ASSET_KEYS = ["total_return", "cagr", "max_drawdown", "sharpe", "win_rate", "profit_factor", "n_trades", "exposure", "buy_hold_return", "excess_return"];
 const UP_KEYS = new Set(["total_return", "cagr", "excess_return"]);
 
-const GITHUB_REPO_URL = "";
+const GITHUB_REPO_URL = "https://github.com/ShEePOAO/quant-studio";
 
 function cssv(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function plotLayout() {
