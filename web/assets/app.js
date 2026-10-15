@@ -1457,19 +1457,25 @@ async function optRun() {
   } finally { btn.disabled = false; }
 }
 function drawOptChart(wrap, o, keys, metric, mlabel, view, hasOOS) {
+  const mfmt = PERCENT.has(metric) ? ".1%" : (metric === "n_trades" ? ",.0f" : ".2f");
   const get = (r) => (view === "oos" ? (r.oos ? r.oos[metric] : null) : r.metrics[metric]);
   if (keys.length === 2) {
     const xs = [...new Set(o.rows.map((r) => r.p[keys[0]]))].sort((a, b) => a - b);
     const ys = [...new Set(o.rows.map((r) => r.p[keys[1]]))].sort((a, b) => a - b);
     const z = ys.map((y) => xs.map((x) => { const row = o.rows.find((r) => r.p[keys[0]] === x && r.p[keys[1]] === y); return row ? get(row) : null; }));
-    const trace = { x: xs, y: ys, z, type: "heatmap", colorscale: [[0, cssv("--chart-down")], [0.5, "#f0f0ee"], [1, cssv("--chart-up")]], hovertemplate: `${keys[0]} %{x}<br>${keys[1]} %{y}<br>${mlabel} %{z:.3f}<extra></extra>` };
+    const trace = {
+      x: xs, y: ys, z, type: "heatmap",
+      colorscale: [[0, cssv("--chart-down")], [0.5, "#f0f0ee"], [1, cssv("--chart-up")]],
+      colorbar: { title: { text: view === "oos" ? `${mlabel} · ${T("樣本外")}` : mlabel, side: "right" }, thickness: 12, tickformat: mfmt, outlinewidth: 0, len: 0.9 },
+      hovertemplate: `${keys[0]} %{x}<br>${keys[1]} %{y}<br>${mlabel} %{z:${mfmt}}<extra></extra>`,
+    };
     const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: keys[1] }; layout.yaxis.tickformat = "";
     Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
   } else {
     const xs = o.rows.map((r) => r.p[keys[0]]);
     const ys = o.rows.map(get);
-    const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", line: { color: cssv("--chart-line"), width: 1.8 }, marker: { size: 6 }, hovertemplate: "%{x} → %{y:.3f}<extra></extra>" };
-    const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: mlabel };
+    const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", line: { color: cssv("--chart-line"), width: 1.8 }, marker: { size: 6 }, hovertemplate: `%{x} → %{y:${mfmt}}<extra></extra>` };
+    const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: mlabel }; layout.yaxis.tickformat = mfmt;
     Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
   }
 }
