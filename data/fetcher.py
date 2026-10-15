@@ -7,7 +7,7 @@ import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import ASSETS
+from config import ASSETS, STOCK_SYMBOLS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(BASE_DIR, "data", "cache")
@@ -34,14 +34,26 @@ def import_available(symbol):
     return os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv"))
 
 
+_IV_RANK = {"5m": 0, "15m": 1, "30m": 2, "1h": 3, "4h": 4, "6h": 5, "12h": 6, "1d": 7, "1w": 8}
+
+
+def _native_rank(symbol):
+    if os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}_1h.csv")):
+        return _IV_RANK["1h"]
+    if os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv")):
+        return _IV_RANK["1d"] if symbol in STOCK_SYMBOLS else _IV_RANK["5m"]
+    return None
+
+
 def interval_available(symbol, interval, source="csv"):
     if source == "binance":
         return True
     if os.path.exists(os.path.join(CACHE_DIR, f"{symbol}_{interval}_import.csv")):
         return True
-    if interval in SUBDaily_INTERVALS and os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}_1h.csv")):
-        return True
-    return os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv"))
+    nr = _native_rank(symbol)
+    if nr is None:
+        return False
+    return _IV_RANK[interval] >= nr
 
 
 def get_data(symbol, interval="1d", start=None, end=None, refresh=False, source="binance"):
