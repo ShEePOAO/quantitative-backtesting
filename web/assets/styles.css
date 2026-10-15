@@ -178,7 +178,7 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
   cursor: pointer; overflow: hidden; white-space: nowrap;
   transition: box-shadow .25s ease;
 }
-.io-btn .io-label { position: relative; z-index: 1; }
+.io-btn .io-label { position: relative; z-index: 2; transition: color .25s ease; }
 .io-btn .io-fill {
   position: absolute; right: 0.3em; top: 4px; width: 32px; height: 32px;
   border-radius: 9px; background: #fff; box-shadow: 0.1em 0.1em 0.6em 0.2em rgba(16, 20, 26, .38);
@@ -193,6 +193,7 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
 .io-btn .io-icon .io-arrow::after { content: ""; position: absolute; right: 0; top: 50%; width: 8px; height: 8px; border-top: 2px solid #1b1f24; border-right: 2px solid #1b1f24; border-radius: 1px; transform: translateY(-50%) rotate(45deg); }
 .io-btn:hover { box-shadow: inset 0 0 0 100px rgba(255, 255, 255, .055), inset 0 0 1.6em -0.6em #000, inset 0 1px 0 rgba(255, 255, 255, .07), 0 1px 2px rgba(16, 20, 26, .22); }
 .io-btn:hover .io-fill { width: calc(100% - 0.6em); }
+.io-btn:hover .io-label { color: var(--ink); }
 .io-btn:hover .io-icon .io-arrow { transform: translateX(3px); }
 .io-btn:active .io-icon .io-arrow { transform: translateX(3px) scale(.9); }
 .io-btn:focus-visible { outline: 2px solid #1b1f24; outline-offset: 2px; }
