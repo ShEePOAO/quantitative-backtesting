@@ -698,8 +698,10 @@ input[type="range"].mix::-moz-range-thumb { border: 0; width: 15px; height: 15px
   100% { transform: translateY(0) translate(0px) rotate(-5deg); }
 }
 /* ---------- elastic checkbox (Uiverse "hadjer_1061", recolored) ---------- */
-.elastic-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; margin-bottom: 6px; }
-.elastic-checkbox-label { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; font-family: var(--font); padding: 5px 4px; }
+.elastic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px 8px; margin: 6px 0 10px; max-height: 320px; overflow-y: auto; }
+.elastic-checkbox-label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-family: var(--font); padding: 5px 8px; border-radius: 8px; border: 1px solid transparent; transition: background-color .15s ease, border-color .15s ease; }
+.elastic-checkbox-label:hover { background: var(--surface-2); }
+.elastic-checkbox-label:has(.elastic-input:checked) { background: var(--surface-2); border-color: var(--line); }
 .elastic-input { position: absolute; opacity: 0; width: 0; height: 0; }
 .elastic-box { width: 20px; height: 20px; border: 2px solid var(--line-strong); border-radius: 6px; background: var(--surface); display: flex; align-items: center; justify-content: center; position: relative; transition: background-color .2s ease, border-color .2s ease; }
 .elastic-checkmark { width: 12px; height: 12px; color: #fff; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset .15s ease; }

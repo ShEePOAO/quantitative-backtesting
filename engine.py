@@ -11,7 +11,7 @@ from core.backtest import run_backtest, run_long_short_backtest
 from core.hedge import DEFAULT_HEDGE_PARAMS, DEFAULT_HEDGE_SETTINGS, run_hedge_backtest
 from core import indicators as ind
 from core.metrics import TRADE_COLUMNS, compute_metrics
-from data.fetcher import get_data, import_available, interval_available
+from data.fetcher import get_data, import_available, interval_available, any_available
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 USER_STRAT_DIR = os.path.join(APP_DIR, "user_strategies")
@@ -193,7 +193,7 @@ def assets_payload():
             "symbol": sym,
             "label": meta.get("label", sym),
             "is_stock": sym in STOCK_SYMBOLS,
-            "has_data": import_available(sym),
+            "has_data": any_available(sym),
         })
     return {
         "assets": rows,

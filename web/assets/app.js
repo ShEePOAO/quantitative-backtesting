@@ -164,17 +164,24 @@ function initEditor() {
 }
 function markEditorValid() { $(".editor-wrap").classList.remove("invalid"); $("#editor-error").hidden = true; }
 
+function availAssets() {
+  const src = $("#source").value;
+  return state.meta.assets.filter((a) => (src === "binance" ? !a.is_stock : a.has_data));
+}
 function populateAssets() {
+  const items = availAssets();
   const single = $("#symbol");
+  const prev = single.value;
   single.innerHTML = "";
-  for (const a of state.meta.assets) {
-    single.appendChild(el("option", { value: a.symbol }, [`${a.symbol} · ${a.label}`]));
-  }
+  for (const a of items) single.appendChild(el("option", { value: a.symbol }, [`${a.symbol} · ${a.label}`]));
   const checks = $("#symbol-checks");
   checks.innerHTML = "";
-  const defaults = ["BTC", "ETH", "XRP"];
-  for (const a of state.meta.assets) {
-    const on = defaults.includes(a.symbol);
+  state.selected.clear();
+  const avail = items.map((a) => a.symbol);
+  const def = ["BTC", "ETH", "XRP"].filter((s) => avail.includes(s));
+  const chosen = def.length ? def : avail.slice(0, 3);
+  for (const a of items) {
+    const on = chosen.includes(a.symbol);
     if (on) state.selected.add(a.symbol);
     const cb = el("input", { type: "checkbox", class: "elastic-input", "data-symbol": a.symbol, checked: on, "aria-label": a.label });
     const box = el("div", { class: "elastic-box" });
@@ -187,6 +194,9 @@ function populateAssets() {
     });
     checks.appendChild(label);
   }
+  if (avail.includes(prev)) single.value = prev; else if (avail.length) single.value = avail[0];
+  single.dispatchEvent(new Event("change"));
+  document.dispatchEvent(new Event("qs-assets"));
 }
 function populateIntervals() {
   const sel = $("#interval");
@@ -196,7 +206,7 @@ function populateIntervals() {
 }
 
 function bindEvents() {
-  $("#source").addEventListener("change", updateContext);
+  $("#source").addEventListener("change", () => { populateAssets(); updateContext(); });
   $("#interval").addEventListener("change", updateContext);
   $("#preset").addEventListener("change", onPreset);
   $("#symbol").addEventListener("change", updateContext);
@@ -1011,7 +1021,7 @@ function setupSymbolCombo() {
   }
   function render(filter) {
     const f = (filter || "").trim().toLowerCase();
-    const items = state.meta.assets.filter((a) => !f || a.symbol.toLowerCase().includes(f) || String(a.label || "").toLowerCase().includes(f));
+    const items = availAssets().filter((a) => !f || a.symbol.toLowerCase().includes(f) || String(a.label || "").toLowerCase().includes(f));
     menu.innerHTML = "";
     if (!items.length) { menu.appendChild(el("div", { class: "empty", text: "找不到資產" })); return; }
     items.forEach((a) => {
@@ -1041,7 +1051,8 @@ function setupSymbolCombo() {
     else if (e.key === "Enter") { e.preventDefault(); const b = btns[menu._active ?? 0]; if (b) b.click(); }
   });
   document.addEventListener("mousedown", (e) => { if (!e.target.closest(".combo")) close(); });
-  selectSymbol(sel.value || (state.meta.assets[0] && state.meta.assets[0].symbol));
+  document.addEventListener("qs-assets", () => { render(""); const a = availAssets(); selectSymbol(sel.value || (a[0] && a[0].symbol)); });
+  selectSymbol(sel.value || (availAssets()[0] && availAssets()[0].symbol));
 }
 
 function enhanceSelect(sel) {

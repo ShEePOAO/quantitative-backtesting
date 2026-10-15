@@ -56,6 +56,13 @@ def interval_available(symbol, interval, source="csv"):
     return _IV_RANK[interval] >= nr
 
 
+def any_available(symbol):
+    for iv in _IV_RANK:
+        if os.path.exists(os.path.join(CACHE_DIR, f"{symbol}_{iv}_import.csv")):
+            return True
+    return _native_rank(symbol) is not None
+
+
 def get_data(symbol, interval="1d", start=None, end=None, refresh=False, source="binance"):
     if source == "csv":
         return _get_import(symbol, interval, start, end, refresh)
