@@ -832,6 +832,46 @@ function baseTrace(name, xy, color, opts = {}) {
   return Object.assign({ x: xy.x, y: xy.y, name, type: "scatter", mode: "lines", line: { width: opts.width || 1.7, color }, hovertemplate: "%{y:,.0f}<extra>" + name + "</extra>" }, opts.extra || {});
 }
 
+function plotGrow(sel, traces, layout) {
+  const gd = typeof sel === "string" ? document.getElementById(sel) : sel;
+  const anim = [];
+  const late = [];
+  traces.forEach((t, i) => {
+    const mode = String(t.mode || "lines");
+    if (t.type === "scatter" && mode.includes("lines") && Array.isArray(t.x) && t.x.length > 2) anim.push(i);
+    else if (t.type === "scatter" && mode.includes("markers") && !mode.includes("lines")) late.push(i);
+  });
+  if (!anim.length) { Plotly.newPlot(gd, traces, layout, PLOT_CONFIG); return; }
+  const full = {};
+  anim.forEach((i) => { full[i] = { x: traces[i].x, y: traces[i].y }; });
+  let yMin = Infinity, yMax = -Infinity;
+  traces.forEach((t) => { if (Array.isArray(t.y)) t.y.forEach((v) => { if (typeof v === "number" && isFinite(v)) { if (v < yMin) yMin = v; if (v > yMax) yMax = v; } }); });
+  const lay = Object.assign({}, layout);
+  if (lay.yaxis && lay.yaxis.type !== "log" && isFinite(yMin) && isFinite(yMax) && yMax > yMin) {
+    const pad = (yMax - yMin) * 0.06;
+    lay.yaxis = Object.assign({}, lay.yaxis, { range: [yMin - pad, yMax + pad] });
+  }
+  const START = 2;
+  const init = traces.map((t, i) => {
+    if (anim.includes(i)) return Object.assign({}, t, { x: t.x.slice(0, START), y: t.y.slice(0, START) });
+    if (late.includes(i)) return Object.assign({}, t, { opacity: 0 });
+    return t;
+  });
+  Plotly.newPlot(gd, init, lay, PLOT_CONFIG);
+  const t0 = performance.now(), DUR = 800, ease = (p) => 1 - Math.pow(1 - p, 3);
+  const frame = (now) => {
+    const p = Math.min(1, (now - t0) / DUR), e = ease(p);
+    const xs = [], ys = [];
+    anim.forEach((i) => { const L = full[i].x.length; const k = Math.max(START, Math.round(L * e)); xs.push(full[i].x.slice(0, k)); ys.push(full[i].y.slice(0, k)); });
+    Plotly.restyle(gd, { x: xs, y: ys }, anim);
+    if (p < 1) requestAnimationFrame(frame);
+    else {
+      Plotly.restyle(gd, { x: anim.map((i) => full[i].x), y: anim.map((i) => full[i].y) }, anim);
+      if (late.length) Plotly.restyle(gd, { opacity: late.map((i) => (traces[i].opacity == null ? 1 : traces[i].opacity)) }, late);
+    }
+  };
+  requestAnimationFrame(frame);
+}
 function renderEquity(r) {
   const traces = [];
   const eq = seriesXY(r.equity);
@@ -857,8 +897,7 @@ function renderEquity(r) {
     const eff = to100(r.equity);
     const lmM = lastPointMarker({ x: eq.x, y: eff }, cssv("--chart-line"), String(eff[eff.length - 1] == null ? "" : eff[eff.length - 1].toFixed(1)));
     if (lmM) traces.push(lmM);
-    Plotly.newPlot("chart-equity", traces, layout, PLOT_CONFIG);
-    wipeEl("chart-equity");
+    plotGrow("chart-equity", traces, layout);
     $("#equity-note").textContent = `${syms.length} 幣 · 起點 = 100 可比較`;
     return;
   }
@@ -878,8 +917,7 @@ function renderEquity(r) {
   if (lmS) traces.push(lmS);
   const layoutS = plotLayout();
   layoutS.yaxis.type = state.equityScale === "log" ? "log" : "linear";
-  Plotly.newPlot("chart-equity", traces, layoutS, PLOT_CONFIG);
-  wipeEl("chart-equity");
+  plotGrow("chart-equity", traces, layoutS);
 }
 
 function renderDrawdown(r) {
