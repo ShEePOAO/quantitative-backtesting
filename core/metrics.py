@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 TRADE_COLUMNS = ["進場時間", "進場價", "出場時間", "出場價", "數量", "成本", "收入", "盈虧", "收益率", "原因"]
 
@@ -8,13 +9,20 @@ def compute_metrics(equity, trades, periods_per_year=365, exposure=0.0, buy_hold
     if len(eq) < 2:
         return {}
     total_return = float(eq.iloc[-1] / eq.iloc[0] - 1)
-    years = len(eq) / periods_per_year
+    ppy = float(periods_per_year)
+    years = len(eq) / ppy
+    idx = getattr(eq, "index", None)
+    if isinstance(idx, pd.DatetimeIndex) and len(eq) >= 2:
+        span_years = (idx[-1] - idx[0]).total_seconds() / (365.25 * 86400.0)
+        if span_years > 0:
+            years = span_years
+            ppy = len(eq) / span_years
     cagr = float((eq.iloc[-1] / eq.iloc[0]) ** (1 / years) - 1) if years > 0 and eq.iloc[0] > 0 else 0.0
     dd = eq / eq.cummax() - 1
     max_dd = float(dd.min())
     rets = eq.pct_change().dropna()
     std = rets.std()
-    ann = np.sqrt(periods_per_year)
+    ann = np.sqrt(ppy)
     sharpe = float(rets.mean() / std * ann) if std and std > 0 else 0.0
     downside = rets[rets < 0].std()
     sortino = float(rets.mean() / downside * ann) if downside and downside > 0 else 0.0

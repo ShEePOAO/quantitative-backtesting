@@ -65,6 +65,31 @@ HEADER = ",DateTime,Open,High,Low,Close,Volume"
 COLS = ["Open", "High", "Low", "Close", "Volume"]
 JOBS = [("1d", "max", ""), ("1h", "730d", "_1h")]
 
+SPLIT_COMMON = [2, 3, 4, 5, 6, 7, 10, 20]
+SPLIT_TOL = 0.03
+
+
+def detect_splits(close):
+    ev = []
+    for i in range(1, len(close)):
+        f = close.iloc[i - 1] / close.iloc[i]
+        if f < 1.15:
+            continue
+        best = min(SPLIT_COMMON, key=lambda k: abs(k - f) / k)
+        if abs(best - f) / best <= SPLIT_TOL:
+            ev.append((close.index[i], float(best)))
+    return ev
+
+
+def adjust_splits(df):
+    ev = detect_splits(df["Close"])
+    for date, ratio in ev:
+        mask = df.index < date
+        for c in COLS[:4]:
+            df.loc[mask, c] = df.loc[mask, c] / ratio
+        df.loc[mask, "Volume"] = df.loc[mask, "Volume"] * ratio
+    return ev
+
 
 def log(msg):
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -81,7 +106,11 @@ def fetch(ticker, interval, period):
     df = df[COLS].dropna(how="any")
     if getattr(df.index, "tz", None) is not None:
         df.index = df.index.tz_convert("UTC").tz_localize(None)
-    return df.sort_index()
+    df = df.sort_index()
+    ev = adjust_splits(df)
+    if ev:
+        log(f"  split-adjust {ticker}: {[(str(d.date()), r) for d, r in ev]}")
+    return df
 
 
 def write_csv(df, path, interval):
