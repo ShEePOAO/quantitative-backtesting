@@ -299,6 +299,7 @@
     "策略宣告": "Strategy declares", "波動目標": "Volatility target", "網格鎖倉引擎": "Grid-hedge engine",
     "移動停損": "Trailing stop", "ATR 停損": "ATR stop", "最長持倉": "Max hold", "回撤停損": "Drawdown stop",
     "目標槓桿": "Target leverage", "風險平價": "Risk parity",
+    "放大編輯": "Expand editor", "編輯策略程式碼": "Edit strategy code", "關閉": "Close",
     "Quant-Studio-使用手冊.md": "Quant-Studio-Manual.md"
   };
 

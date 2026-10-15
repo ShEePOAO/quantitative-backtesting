@@ -160,6 +160,7 @@
 
     <section class="grp">
       <h2 class="grp-title"><svg class="gi" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 6 3 10l4 4"/><path d="M13 6l4 4-4 4"/></svg>策略程式碼</h2>
+      <button id="editor-expand" class="expand-btn" type="button" aria-label="放大編輯" title="放大編輯"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
       <div class="file-drop">
         <div class="fd-folder">
           <div class="fd-front"><div class="fd-tip"></div><div class="fd-cover"></div></div>
@@ -449,6 +450,16 @@
       <span class="underline" aria-hidden="true"></span>
     </div>
     <div id="palette-list" class="palette-list"></div>
+  </div>
+</div>
+
+<div id="code-modal" class="code-modal" hidden>
+  <div class="code-modal-panel" role="dialog" aria-modal="true" aria-label="編輯策略程式碼">
+    <div class="code-modal-head">
+      <span class="code-modal-title">策略程式碼</span>
+      <button id="code-modal-close" class="btn btn-ghost btn-sm" type="button">關閉</button>
+    </div>
+    <div class="code-modal-body"><textarea id="code-big" spellcheck="false" translate="no" aria-label="編輯策略程式碼"></textarea></div>
   </div>
 </div>
 

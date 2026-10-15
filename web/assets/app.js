@@ -164,6 +164,43 @@ function initEditor() {
 }
 function markEditorValid() { $(".editor-wrap").classList.remove("invalid"); $("#editor-error").hidden = true; }
 
+let modalEditor = null;
+function initCodeModal() {
+  const ta = $("#code-big");
+  if (!window.CodeMirror || !ta) return;
+  modalEditor = CodeMirror.fromTextArea(ta, {
+    mode: "python", theme: "quant", lineNumbers: true, indentUnit: 4, tabSize: 4,
+    lineWrapping: false, autoCloseBrackets: true, viewportMargin: Infinity,
+  });
+  modalEditor.setSize("100%", "100%");
+  modalEditor.on("change", debounce(() => { if (state.editor) state.editor.setValue(modalEditor.getValue()); }, 450));
+  modalEditor.setOption("extraKeys", { Esc: () => closeCodeModal() });
+  const ex = $("#editor-expand");
+  if (ex) ex.addEventListener("click", openCodeModal);
+  $("#code-modal-close").addEventListener("click", closeCodeModal);
+  $("#code-modal").addEventListener("mousedown", (e) => { if (e.target.id === "code-modal") closeCodeModal(); });
+}
+function openCodeModal() {
+  if (!modalEditor) return;
+  modalEditor.setValue(state.editor ? state.editor.getValue() : "");
+  const m = $("#code-modal");
+  m.hidden = false;
+  requestAnimationFrame(() => m.classList.add("open"));
+  setTimeout(() => { modalEditor.refresh(); modalEditor.focus(); }, 80);
+}
+function closeCodeModal() {
+  const m = $("#code-modal");
+  if (!modalEditor || m.hidden) return;
+  m.classList.remove("open");
+  const final = modalEditor.getValue();
+  if (state.editor && final !== state.editor.getValue()) {
+    state.editor.setValue(final);
+    if (state.editor.clearHistory) state.editor.clearHistory();
+    parseParams();
+  }
+  setTimeout(() => { m.hidden = true; }, 240);
+}
+
 function availAssets() {
   const src = $("#source").value;
   return state.meta.assets.filter((a) => (src === "binance" ? !a.is_stock : a.has_data));
@@ -263,6 +300,7 @@ function bindEvents() {
   setupSplitter();
   initGithubStar();
   initLang();
+  initCodeModal();
 
   document.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); run(); }
