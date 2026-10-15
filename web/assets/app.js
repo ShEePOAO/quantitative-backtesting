@@ -794,6 +794,7 @@ function renderReadout(m) {
     const vEl = el("div", { class: "v " + tone(key, m[key]) });
     const cell = el("div", { class: "cell" }, [kEl, vEl]);
     wrap.appendChild(cell);
+    cell.style.setProperty("--i", wrap.childElementCount - 1);
     countUp(vEl, key, m[key]);
   }
 }
