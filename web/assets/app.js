@@ -456,6 +456,9 @@ function renderStrategyFlags(f) {
 function loaderHTML(text) {
   return `<div class="load-view"><div class="load-creature"></div><p class="loader-text">${text}</p></div>`;
 }
+function candleLoaderHTML(text) {
+  return `<div class="load-view"><div class="candle-scene"><div class="candles"><div class="light__wave"></div><div class="candle1"><div class="candle1__body"><div class="candle1__eyes"><span class="candle1__eyes-one"></span><span class="candle1__eyes-two"></span></div><div class="candle1__mouth"></div></div><div class="candle1__stick"></div></div><div class="candle2"><div class="candle2__body"><div class="candle2__eyes"><div class="candle2__eyes-one"></div><div class="candle2__eyes-two"></div></div></div><div class="candle2__stick"></div></div><div class="candle2__fire"></div><div class="sparkles-one"></div><div class="sparkles-two"></div><div class="candle__smoke-one"></div><div class="candle__smoke-two"></div></div><div class="floor"></div></div><p class="loader-text">${text}</p></div>`;
+}
 function renderParams(defs) {
   const wrap = $("#params");
   const grp = $("#params-grp");
@@ -1423,7 +1426,7 @@ async function optRun() {
   };
   const btn = $("#opt-run");
   btn.disabled = true; setStatus("busy", "優化中…");
-  $("#opt-output").innerHTML = loaderHTML(T("優化中…"));
+  $("#opt-output").innerHTML = candleLoaderHTML(T("優化中…"));
   try {
     const res = await fetch("/api/optimize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) { let d = null; try { d = await res.json(); } catch (e) { /* ignore */ } throw Object.assign(new Error((d && d.error) || `HTTP ${res.status}`), { detail: d && d.detail }); }
