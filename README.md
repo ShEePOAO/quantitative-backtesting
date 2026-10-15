@@ -36,6 +36,7 @@ quant-studio/
 │   ├── vendor/galaxy.min.js   # GalaxyJS (animation layer, MIT, vendored)
 │   └── assets/{styles.css, app.js, i18n.js}
 ├── PRODUCT.md / DESIGN.md
+├── update_stocks.py
 └── requirements.txt
 ```
 
@@ -54,6 +55,7 @@ On Windows you can also double-click `start.bat`.
 
 - A small set of **daily historical data** is bundled in `data/cache/`: BTC, ETH, SOL, XRP, BNB (plus 12h for BTC/SOL) and NVDA, GOOGL, COIN. Clone it and run with **Local CSV + Daily** to try it right away.
 - Provide your own market CSV: `data/import_csv/<SYMBOL>.csv`, or point `QUANT_IMPORT_DIR` at an existing folder.
+- **Stocks (Taiwan + US)**: run `python update_stocks.py` (yfinance) to fetch **daily + hourly** into your import dir. It covers common TW names (2330 TSMC, 0050, 2317, 2454, …) and US names (AAPL, MSFT, NVDA, TSLA, TSM, …); `python update_stocks.py 2330 TSLA` updates only those. `python update_stocks.py --list` lists all.
 - Format: `DateTime,Open,High,Low,Close,Volume` (intraday or daily; the app resamples as needed).
 - Other intervals are derived from the source CSV and cached into `data/cache` (`<SYMBOL>_<interval>_import.csv`).
 - Note: bundled market data is for research/demo only — check the data provider's redistribution terms before reuse.
@@ -98,6 +100,7 @@ quant-studio/
 │   ├── vendor/galaxy.min.js   # GalaxyJS（動畫層，MIT，vendored）
 │   └── assets/{styles.css, app.js, i18n.js}
 ├── PRODUCT.md / DESIGN.md
+├── update_stocks.py
 └── requirements.txt
 ```
 
@@ -116,6 +119,7 @@ Windows 也可直接雙擊 `start.bat`。
 
 - 附帶一批**日線歷史資料**（在 `data/cache/`）：BTC、ETH、SOL、XRP、BNB（另有 BTC/SOL 的 12h）與 NVDA、GOOGL、COIN。clone 後選「本地 CSV ＋ 日線」即可直接回測。
 - 也可自備行情 CSV：放到 `data/import_csv/<SYMBOL>.csv`，或以環境變數 `QUANT_IMPORT_DIR` 指向既有資料夾。
+- **股票（台股＋美股）**：執行 `python update_stocks.py`（yfinance）會抓**日線＋小時**到你指定的資料夾。涵蓋常見台股（2330 台積電、0050、2317、2454…）與美股（AAPL、MSFT、NVDA、TSLA、TSM…）；`python update_stocks.py 2330 TSLA` 只更新指定幾檔、`--list` 列出全部。
 - 格式：`DateTime,Open,High,Low,Close,Volume`（分鐘或日線皆可，程式會視需要重採樣）。
 - 其他週期由來源 CSV 重採樣後快取到 `data/cache`（`<SYMBOL>_<interval>_import.csv`）。
 - 注意：附帶的行情資料僅供研究／示範，重複散布前請自行確認資料來源的授權條款。
