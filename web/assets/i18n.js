@@ -126,7 +126,7 @@
     "60% 訓練 / 40% 驗證": "60% train / 40% validate",
     "此週期沒有本地歷史資料，回測可能失敗；請改選其他週期、上傳 CSV，或改用 Binance 資料來源。": "No local historical data for this interval; the backtest may fail. Pick another interval, upload a CSV, or switch the data source to Binance.",
     "波動目標：倉位 = 基礎倉位 × clip(目標波動 ÷ 平滑後已實現波動, 0.2, 2.0)。高波動自動縮倉、低波動加倉——不砍任何交易，是「倉位公式」不是「濾網」。": "Volatility target: position = base × clip(target vol ÷ smoothed realized vol, 0.2, 2.0). Auto-shrink in high vol, add in low vol — never drops a trade; it's a position formula, not a filter.",
-    "可用 pd、np 與多種技術指標（sma、ema、wma、rsi、macd、bollinger、atr、adx、kdj、cci、mfi、obv、vwap…）。用到哪個指標，它的調參欄位會自動出現。df 欄位 open/high/low/close/volume。": "pd/np plus a wide range of technical indicators (sma, ema, wma, rsi, macd, bollinger, atr, adx, kdj, cci, mfi, obv, vwap, …). Params for whichever indicator you use appear automatically. df columns: open/high/low/close/volume.",
+    "可用 pd、np 與數十種技術指標。用到哪個指標，它的調參欄位會自動出現。df 欄位 open/high/low/close/volume。": "pd/np plus dozens of technical indicators. Params for whichever indicator you use appear automatically. df columns: open/high/low/close/volume.",
     "SMA 週期": "SMA period", "EMA 週期": "EMA period", "WMA 週期": "WMA period", "RMA 週期": "RMA period",
     "DEMA 週期": "DEMA period", "HMA 週期": "HMA period", "標準差 週期": "Stdev period", "Z分數 週期": "Z-score period",
     "RSI 週期": "RSI period", "ROC 週期": "ROC period", "動量 週期": "Momentum period", "TRIX 週期": "TRIX period",
