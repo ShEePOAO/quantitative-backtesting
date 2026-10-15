@@ -111,7 +111,6 @@
     "（越小越好）": " (lower is better)",
     "波動目標：倉位 = 基礎倉位 × clip(目標波動 ÷ 平滑後已實現波動, 0.2, 2.0)。高波動自動縮倉、低波動加倉——不砍任何交易，是「倉位公式」不是「濾網」。": "Volatility target: position = base × clip(target vol ÷ smoothed realized vol, 0.2, 2.0). Auto-shrink in high vol, add in low vol — never drops a trade; it's a position formula, not a filter.",
     "可用：pd、np、sma、ema、rsi、macd、bollinger、atr、roc。df 欄位 open/high/low/close/volume。": "Available: pd, np, sma, ema, rsi, macd, bollinger, atr, roc. df columns: open/high/low/close/volume.",
-    "，回傳目標倉位（0 空倉、1 做多、-1 做空）。右側會顯示績效、權益曲線、買賣點與交易明細。": ", return target positions (0 flat, 1 long, -1 short). The right side shows performance, equity curve, trades and details.",
     "選擇指標與 1–2 個參數，按「開始優化」。結果會顯示熱力圖與明細表，用來找**穩定的參數區**（而非單一尖峰——尖峰通常是過擬合）。": "Pick a metric and 1–2 params, then click Optimize. You'll get a heatmap and a table to find a **stable parameter region** (not a single spike — spikes are usually overfit).",
     "勾選要掃描的參數（最多 2 個＝畫熱力圖），設定最小 / 最大 / 步長；未勾的用目前「策略參數」的值。組合數上限 400。": "Check the params to scan (up to 2 = heatmap), set min / max / step; unchecked use current values. Max 400 combos.",
     "目前策略沒有可掃描的數值參數（需定義 PARAM_DEFS）。": "This strategy has no numeric params to scan (define PARAM_DEFS).",
