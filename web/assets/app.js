@@ -126,7 +126,7 @@ async function init() {
   bindEvents();
   setupSymbolCombo();
   setupDual();
-  ["source", "interval", "preset", "pm_mode", "opt-metric", "load-select"].forEach((id) => enhanceSelect(document.getElementById(id)));
+  ["source", "interval", "preset", "pm_mode", "opt-metric", "opt-split", "load-select"].forEach((id) => enhanceSelect(document.getElementById(id)));
   updateContext();
   loadStrategyList();
   parseParams();
@@ -341,6 +341,21 @@ function updateContext() {
   } else {
     $("#context").textContent = `${src} · ${state.selected.size} 幣 · ${iv}`;
   }
+  checkIntervalAvail();
+}
+let availSeq = 0;
+async function checkIntervalAvail() {
+  const note = $("#interval-note");
+  if (!note) return;
+  if (state.mode !== "single" || $("#source").value === "binance") { note.hidden = true; note.textContent = ""; return; }
+  const iv = $("#interval").value, symbol = $("#symbol").value;
+  const seq = ++availSeq;
+  try {
+    const data = await api(`/api/avail?symbol=${encodeURIComponent(symbol)}&source=csv`);
+    if (seq !== availSeq || state.mode !== "single" || $("#interval").value !== iv) return;
+    if (data.intervals && data.intervals[iv]) { note.hidden = true; note.textContent = ""; }
+    else { note.textContent = "此週期沒有本地歷史資料，回測可能失敗；請改選其他週期、上傳 CSV，或改用 Binance 資料來源。"; note.hidden = false; }
+  } catch (e) { note.hidden = true; }
 }
 
 /* ---------- params ---------- */
@@ -1316,7 +1331,7 @@ async function optRun() {
     code: codeGet(), params: collectParams(), settings: settingsPayload(),
     symbol: $("#symbol").value, interval: $("#interval").value, start: dates.start, end: dates.end,
     source: $("#source").value, refresh: $("#refresh").checked, use_hedge: $("#use_hedge").checked,
-    grid, metric: $("#opt-metric").value,
+    grid, metric: $("#opt-metric").value, split: Number($("#opt-split").value) || 0,
   };
   const btn = $("#opt-run");
   btn.disabled = true; setStatus("busy", "優化中…");
@@ -1350,59 +1365,107 @@ async function optRun() {
     showToast(e.message, "err");
   } finally { btn.disabled = false; }
 }
+function drawOptChart(wrap, o, keys, metric, mlabel, view, hasOOS) {
+  const get = (r) => (view === "oos" ? (r.oos ? r.oos[metric] : null) : r.metrics[metric]);
+  if (keys.length === 2) {
+    const xs = [...new Set(o.rows.map((r) => r.p[keys[0]]))].sort((a, b) => a - b);
+    const ys = [...new Set(o.rows.map((r) => r.p[keys[1]]))].sort((a, b) => a - b);
+    const z = ys.map((y) => xs.map((x) => { const row = o.rows.find((r) => r.p[keys[0]] === x && r.p[keys[1]] === y); return row ? get(row) : null; }));
+    const trace = { x: xs, y: ys, z, type: "heatmap", colorscale: [[0, cssv("--chart-down")], [0.5, "#f0f0ee"], [1, cssv("--chart-up")]], hovertemplate: `${keys[0]} %{x}<br>${keys[1]} %{y}<br>${mlabel} %{z:.3f}<extra></extra>` };
+    const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: keys[1] }; layout.yaxis.tickformat = "";
+    Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
+  } else {
+    const xs = o.rows.map((r) => r.p[keys[0]]);
+    const ys = o.rows.map(get);
+    const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", line: { color: cssv("--chart-line"), width: 1.8 }, marker: { size: 6 }, hovertemplate: "%{x} → %{y:.3f}<extra></extra>" };
+    const layout = plotLayout(); layout.xaxis.title = { text: keys[0] }; layout.yaxis.title = { text: mlabel };
+    Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
+  }
+}
+function neighborAvgMap(rows, keys, metric) {
+  const axis = keys.map((k) => [...new Set(rows.map((r) => r.p[k]))].sort((a, b) => a - b));
+  const idxMaps = axis.map((vals) => new Map(vals.map((v, i) => [v, i])));
+  const grid = new Map();
+  rows.forEach((r) => { grid.set(keys.map((k, i) => idxMaps[i].get(r.p[k])).join(","), r); });
+  const res = new Map();
+  rows.forEach((r) => {
+    const pos = keys.map((k, i) => idxMaps[i].get(r.p[k]));
+    let sum = 0, cnt = 0;
+    const recur = (d, cur) => {
+      if (d === keys.length) { if (cur.join(",") === pos.join(",")) return; const nb = grid.get(cur.join(",")); if (nb && nb.metrics[metric] != null) { sum += nb.metrics[metric]; cnt++; } return; }
+      for (let p = pos[d] - 1; p <= pos[d] + 1; p++) { if (p >= 0 && p < axis[d].length) recur(d + 1, cur.concat(p)); }
+    };
+    recur(0, []);
+    res.set(r, cnt ? sum / cnt : null);
+  });
+  return res;
+}
 function renderOptResult(o) {
   const out = $("#opt-output");
   out.innerHTML = "";
   const MKEY = { sharpe: "夏普", total_return: "總收益", cagr: "年化", max_drawdown: "回撤", calmar: "卡瑪", profit_factor: "盈虧比", win_rate: "勝率" };
   const metric = o.metric, mlabel = MKEY[metric] || metric, keys = o.keys;
-  if (keys.length === 2) {
-    const xs = [...new Set(o.rows.map((r) => r.p[keys[0]]))].sort((a, b) => a - b);
-    const ys = [...new Set(o.rows.map((r) => r.p[keys[1]]))].sort((a, b) => a - b);
-    const z = ys.map((y) => xs.map((x) => {
-      const row = o.rows.find((r) => r.p[keys[0]] === x && r.p[keys[1]] === y);
-      return row ? row.metrics[metric] : null;
-    }));
-    const trace = { x: xs, y: ys, z, type: "heatmap", colorscale: [[0, cssv("--chart-down")], [0.5, "#f0f0ee"], [1, cssv("--chart-up")]], hovertemplate: `${keys[0]} %{x}<br>${keys[1]} %{y}<br>${mlabel} %{z:.3f}<extra></extra>` };
-    const layout = plotLayout();
-    layout.xaxis.title = { text: keys[0] };
-    layout.yaxis.title = { text: keys[1] };
-    layout.yaxis.tickformat = "";
-    const wrap = el("div", { class: "chart" });
-    out.appendChild(wrap);
-    Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
-  } else if (keys.length === 1) {
-    const xs = o.rows.map((r) => r.p[keys[0]]);
-    const ys = o.rows.map((r) => r.metrics[metric]);
-    const trace = { x: xs, y: ys, type: "scatter", mode: "lines+markers", line: { color: cssv("--chart-line"), width: 1.8 }, marker: { size: 6 }, hovertemplate: "%{x} → %{y:.3f}<extra></extra>" };
-    const layout = plotLayout();
-    layout.xaxis.title = { text: keys[0] };
-    layout.yaxis.title = { text: mlabel };
-    const wrap = el("div", { class: "chart" });
-    out.appendChild(wrap);
-    Plotly.newPlot(wrap, [trace], layout, PLOT_CONFIG);
-  }
   const asc = metric === "max_drawdown";
-  const sorted = [...o.rows].sort((a, b) => {
-    const x = a.metrics[metric], y = b.metrics[metric];
-    if (x == null) return 1; if (y == null) return -1;
-    return asc ? x - y : y - x;
-  }).slice(0, 50);
+  const hasOOS = !!o.split && o.rows.some((r) => r.oos);
+  const pick = (src) => o.rows.filter((r) => (src === "oos" ? r.oos && r.oos[metric] != null : r.metrics[metric] != null))
+    .slice().sort((a, b) => { const x = src === "oos" ? a.oos[metric] : a.metrics[metric]; const y = src === "oos" ? b.oos[metric] : b.metrics[metric]; return asc ? x - y : y - x; })[0];
+  const pf = (r) => keys.map((k) => `${k}=${r.p[k]}`).join(", ");
+
+  const notice = el("div", { class: "notice", "data-kind": "warn" });
+  notice.appendChild(el("div", { html: `<b>${T("過擬合提醒")}</b>` }));
+  notice.appendChild(el("div", { text: T("參數優化是對歷史資料做『事後最佳化』，很容易過擬合。請優先找穩定高原，而不是單一尖峰。") }));
+  if (hasOOS) {
+    notice.appendChild(el("div", { text: `${T("樣本外驗證")}：${T("訓練")} ${o.n_train} ${T("根")}（${T("至")} ${o.train_end}）／${T("驗證")} ${o.n_test} ${T("根")}（${T("自")} ${o.test_start}）` }));
+    const bIS = pick("is"), bOOS = pick("oos");
+    if (bIS) notice.appendChild(el("div", { text: `${T("樣本內最佳")}（${pf(bIS)}）：${T("訓練")} ${fmt(metric, bIS.metrics[metric])}${bIS.oos ? ` → ${T("驗證")} ${fmt(metric, bIS.oos[metric])}` : ""}` }));
+    if (bIS && bOOS) {
+      const same = keys.every((k) => bIS.p[k] === bOOS.p[k]);
+      notice.appendChild(el("div", { text: same ? T("樣本內／樣本外的最佳同一組，相對穩健。") : `${T("警告")}：${T("樣本外最佳與樣本內最佳不同")}（${T("樣本外最佳")}：${pf(bOOS)}），${T("可能過擬合")}。` }));
+    }
+  } else {
+    notice.appendChild(el("div", { text: T("目前為全樣本優化，未做樣本外切分。建議把上方「樣本外驗證」打開再比較。") }));
+  }
+  out.appendChild(notice);
+
+  if (keys.length >= 1) {
+    let view = "is";
+    const chartWrap = el("div", { class: "chart" });
+    const draw = () => drawOptChart(chartWrap, o, keys, metric, mlabel, view, hasOOS);
+    if (hasOOS) {
+      const seg = el("div", { class: "opt-seg" });
+      [["is", T("樣本內")], ["oos", T("樣本外")]].forEach(([v, t]) => {
+        const b = el("button", { type: "button", class: "btn btn-ghost btn-sm" + (v === view ? " is-active" : ""), text: t });
+        b.addEventListener("click", () => { view = v; seg.querySelectorAll("button").forEach((x) => x.classList.toggle("is-active", x === b)); draw(); });
+        seg.appendChild(b);
+      });
+      out.appendChild(seg);
+    }
+    draw();
+    out.appendChild(chartWrap);
+  }
+
+  const rob = neighborAvgMap(o.rows, keys, metric);
+  const sorted = o.rows.slice().sort((a, b) => { const x = a.metrics[metric], y = b.metrics[metric]; if (x == null) return 1; if (y == null) return -1; return asc ? x - y : y - x; }).slice(0, 50);
   const table = el("table");
   const thead = el("thead"); const hr = el("tr");
-  keys.forEach((k) => hr.appendChild(el("th", { class: "num" }, [k])));
-  o.metrics.forEach((m) => hr.appendChild(el("th", { class: "num" }, [MKEY[m] || m])));
+  keys.forEach((k) => hr.appendChild(el("th", { class: "num", text: k })));
+  o.metrics.forEach((m) => hr.appendChild(el("th", { class: "num", text: `${MKEY[m] || m}（${T("訓練")}）` })));
+  if (hasOOS) hr.appendChild(el("th", { class: "num", text: `${mlabel}（${T("驗證")}）` }));
+  hr.appendChild(el("th", { class: "num", text: T("鄰域均值") }));
   thead.appendChild(hr); table.appendChild(thead);
   const tb = el("tbody");
   sorted.forEach((r) => {
     const tr = el("tr");
     keys.forEach((k) => tr.appendChild(el("td", { class: "num", text: String(r.p[k]) })));
     o.metrics.forEach((m) => tr.appendChild(el("td", { class: "num", text: fmt(m, r.metrics[m]) })));
+    if (hasOOS) tr.appendChild(el("td", { class: "num", text: r.oos ? fmt(metric, r.oos[metric]) : "—" }));
+    const rv = rob.get(r);
+    tr.appendChild(el("td", { class: "num", text: rv != null ? rv.toFixed(3) : "—" }));
     tb.appendChild(tr);
   });
   table.appendChild(tb);
-  const tw = el("div", { class: "tablewrap" });
-  tw.appendChild(table); out.appendChild(tw);
-  out.appendChild(el("p", { class: "hint", html: `指標：<b>${mlabel}</b>${asc ? "（越小越好）" : "（越大越好）"}；顯示前 ${sorted.length} 名。找「穩定高原」而非單一尖峰。` }));
+  const tw = el("div", { class: "tablewrap" }); tw.appendChild(table); out.appendChild(tw);
+  out.appendChild(el("p", { class: "hint", text: `${T("指標")}：${mlabel}${asc ? T("（越小越好）") : T("（越大越好）")}；${T("顯示前")} ${sorted.length} ${T("名。找穩定高原而非單一尖峰。")}` }));
 }
 
 /* ---------- drag-to-scrub numbers ---------- */

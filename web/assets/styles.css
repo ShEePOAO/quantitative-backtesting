@@ -614,6 +614,9 @@ input[type="range"].mix::-moz-range-thumb { border: 0; width: 15px; height: 15px
 .opt-param .nm { font-size: 12.5px; color: var(--ink-2); }
 .opt-param input[type="number"] { width: 100%; height: 30px; }
 .opt-param .hdr { font-size: 10.5px; color: var(--ink-3); text-align: center; }
+.opt-seg { display: flex; gap: 8px; margin: 10px 0 4px; }
+.opt-seg .btn.is-active { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.field-note { display: block; margin-top: 5px; font-size: 11.5px; line-height: 1.45; color: #946007; }
 
 /* ---------- manual button (folder/pencil hover, adapted from Uiverse "Nawsome") ---------- */
 .continue-application {

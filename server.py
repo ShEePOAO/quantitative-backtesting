@@ -63,6 +63,7 @@ class OptBody(BaseModel):
     use_hedge: bool = False
     grid: dict
     metric: str = "sharpe"
+    split: float = 0
 
 
 @app.get("/api/meta")
@@ -111,6 +112,11 @@ def optimize(body: OptBody):
             yield json.dumps({"type": "error", "error": str(e) or e.__class__.__name__, "detail": traceback.format_exc()}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(gen(), media_type="application/x-ndjson")
+
+
+@app.get("/api/avail")
+def avail(symbol: str, source: str = "csv"):
+    return {"symbol": symbol, "source": source, "intervals": engine.availability_payload(symbol, source)}
 
 
 @app.get("/api/strategies")

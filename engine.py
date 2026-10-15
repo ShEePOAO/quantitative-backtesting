@@ -11,7 +11,7 @@ from core.backtest import run_backtest, run_long_short_backtest
 from core.hedge import DEFAULT_HEDGE_PARAMS, DEFAULT_HEDGE_SETTINGS, run_hedge_backtest
 from core import indicators as ind
 from core.metrics import TRADE_COLUMNS, compute_metrics
-from data.fetcher import get_data, import_available
+from data.fetcher import get_data, import_available, interval_available
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 USER_STRAT_DIR = os.path.join(APP_DIR, "user_strategies")
@@ -101,6 +101,7 @@ for _name in INDICATOR_SPECS:
 class _IndicatorBinder(ast.NodeTransformer):
     def __init__(self):
         self.defs = {}
+        self.counts = {}
 
     @staticmethod
     def _is_num(node):
@@ -111,9 +112,16 @@ class _IndicatorBinder(ast.NodeTransformer):
         return ast.Call(func=ast.Name(id="_qs_param", ctx=ast.Load()),
                         args=[ast.Constant(value=key), val], keywords=[])
 
-    def _default_node(self, key, meta):
-        return ast.Call(func=ast.Name(id="_qs_param", ctx=ast.Load()),
-                        args=[ast.Constant(value=key), ast.Constant(value=meta.get("default"))], keywords=[])
+    def _next(self, base):
+        n = self.counts.get(base, 0) + 1
+        self.counts[base] = n
+        return base if n == 1 else f"{base}~{n}"
+
+    def _meta_for(self, ind_name, pname, key):
+        m = dict(INDICATOR_SPECS[ind_name]["meta"].get(pname, {}))
+        if "~" in key:
+            m["label"] = (m.get("label") or pname) + " " + key.split("~")[1]
+        return m
 
     def visit_Call(self, node):
         self.generic_visit(node)
@@ -122,7 +130,6 @@ class _IndicatorBinder(ast.NodeTransformer):
             return node
         spec = INDICATOR_SPECS[fn.id]
         names = spec["args"]
-        meta = spec["meta"]
         provided = set()
         for i, arg in enumerate(node.args):
             if i == 0:
@@ -131,25 +138,26 @@ class _IndicatorBinder(ast.NodeTransformer):
             if pname:
                 provided.add(pname)
                 if self._is_num(arg):
-                    key = f"{fn.id}__{pname}"
-                    self.defs[key] = meta.get(pname, {})
+                    key = self._next(f"{fn.id}__{pname}")
+                    self.defs[key] = self._meta_for(fn.id, pname, key)
                     node.args[i] = self._wrap(key, arg)
         for kw in node.keywords:
             if kw.arg in names:
                 provided.add(kw.arg)
                 if self._is_num(kw.value):
-                    key = f"{fn.id}__{kw.arg}"
-                    self.defs[key] = meta.get(kw.arg, {})
+                    key = self._next(f"{fn.id}__{kw.arg}")
+                    self.defs[key] = self._meta_for(fn.id, kw.arg, key)
                     kw.value = self._wrap(key, kw.value)
-        missing = [p for p in names if p not in provided]
-        for p in missing:
-            key = f"{fn.id}__{p}"
-            self.defs[key] = meta.get(p, {})
-            node_ = self._default_node(key, meta.get(p, {}))
+        for p in [p for p in names if p not in provided]:
+            key = self._next(f"{fn.id}__{p}")
+            meta = self._meta_for(fn.id, p, key)
+            self.defs[key] = meta
+            dn = ast.Call(func=ast.Name(id="_qs_param", ctx=ast.Load()),
+                          args=[ast.Constant(value=key), ast.Constant(value=meta.get("default"))], keywords=[])
             if node.keywords:
-                node.keywords.append(ast.keyword(arg=p, value=node_))
+                node.keywords.append(ast.keyword(arg=p, value=dn))
             else:
-                node.args.append(node_)
+                node.args.append(dn)
         return node
 
 
@@ -194,6 +202,10 @@ def assets_payload():
         "periods_per_year": PERIODS_PER_YEAR,
         "template": TEMPLATE,
     }
+
+
+def availability_payload(symbol, source="csv"):
+    return {iv: bool(interval_available(symbol, iv, source)) for iv in INTERVALS}
 
 
 def load_df(symbol, interval, start, end, refresh, source):
@@ -610,12 +622,19 @@ def optimize_stream(req):
     symbol = req.get("symbol", "BTC")
     metric = req.get("metric", "sharpe")
     grid = req.get("grid") or {}
+    split = float(req.get("split") or 0)
     if not grid:
         raise ValueError("請設定要掃描的參數範圍")
 
     df = load_df(symbol, interval, start, end, refresh, source)
     if len(df) < 30:
         raise ValueError("數據不足，無法優化")
+
+    df_tr, df_te = df, None
+    if 0.05 <= split <= 0.95:
+        k = int(round(len(df) * split))
+        if k >= 30 and (len(df) - k) >= 15:
+            df_tr, df_te = df.iloc[:k], df.iloc[k:]
 
     axes = {}
     for k, spec in grid.items():
@@ -636,26 +655,50 @@ def optimize_stream(req):
     if len(combos) > MAX_COMBOS:
         raise ValueError(f"組合數 {len(combos)} 超過上限 {MAX_COMBOS}，請縮小範圍或加大步長")
 
-    total = len(combos)
+    total = len(combos) * (2 if df_te is not None else 1)
     rows = []
-    for i, combo in enumerate(combos):
+    done = 0
+    for combo in combos:
         p = dict(params)
         for k, v in zip(keys, combo):
             p[k] = v
         try:
-            sig = call_generate(ns, df, p)
-            res, _, _ = run_custom(df, sig, settings, ppy, use_hedge)
+            sig = call_generate(ns, df_tr, p)
+            res, _, _ = run_custom(df_tr, sig, settings, ppy, use_hedge)
             m = _metrics_payload(res.metrics)
         except Exception:
             m = {k2: None for k2 in OPT_METRICS}
         rows.append({"p": {k: v for k, v in zip(keys, combo)}, "metrics": {k2: m.get(k2) for k2 in OPT_METRICS}})
-        if i % 4 == 0 or i == total - 1:
-            yield {"type": "progress", "done": i + 1, "total": total, "label": ""}
+        done += 1
+        if done % 4 == 0 or done == total:
+            yield {"type": "progress", "done": done, "total": total, "label": ""}
 
-    yield {"type": "result", "result": {
+    if df_te is not None:
+        for combo, row in zip(combos, rows):
+            p = dict(params)
+            for k, v in zip(keys, combo):
+                p[k] = v
+            try:
+                sig = call_generate(ns, df_te, p)
+                res, _, _ = run_custom(df_te, sig, settings, ppy, use_hedge)
+                m = _metrics_payload(res.metrics)
+            except Exception:
+                m = {}
+            row["oos"] = {k2: m.get(k2) for k2 in OPT_METRICS}
+            done += 1
+            if done % 4 == 0 or done == total:
+                yield {"type": "progress", "done": done, "total": total, "label": ""}
+
+    res = {
         "keys": keys, "metric": metric, "metrics": OPT_METRICS,
-        "rows": rows, "symbol": symbol, "interval": interval, "combos": total,
-    }}
+        "rows": rows, "symbol": symbol, "interval": interval, "combos": len(combos),
+        "split": (split if df_te is not None else 0),
+        "n_train": int(len(df_tr)),
+        "n_test": (int(len(df_te)) if df_te is not None else 0),
+        "train_end": (str(df_tr.index[-1].date()) if df_te is not None else None),
+        "test_start": (str(df_te.index[0].date()) if df_te is not None else None),
+    }
+    yield {"type": "result", "result": res}
 
 
 def run_optimize(req):

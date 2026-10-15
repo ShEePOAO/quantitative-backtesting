@@ -34,6 +34,16 @@ def import_available(symbol):
     return os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv"))
 
 
+def interval_available(symbol, interval, source="csv"):
+    if source == "binance":
+        return True
+    if os.path.exists(os.path.join(CACHE_DIR, f"{symbol}_{interval}_import.csv")):
+        return True
+    if interval in SUBDaily_INTERVALS and os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}_1h.csv")):
+        return True
+    return os.path.exists(os.path.join(IMPORT_DIR, f"{symbol}.csv"))
+
+
 def get_data(symbol, interval="1d", start=None, end=None, refresh=False, source="binance"):
     if source == "csv":
         return _get_import(symbol, interval, start, end, refresh)

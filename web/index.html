@@ -95,6 +95,7 @@
         <label class="field">
           <span class="field-label">時間週期</span>
           <select id="interval" name="interval"></select>
+          <span class="field-note" id="interval-note" hidden></span>
         </label>
       </div>
 
@@ -421,6 +422,14 @@
               <option value="cagr">年化 (CAGR)</option>
               <option value="profit_factor">盈虧比</option>
               <option value="max_drawdown">最大回撤</option>
+            </select>
+          </label>
+          <label class="field"><span class="field-label">樣本外驗證</span>
+            <select id="opt-split">
+              <option value="0">關閉</option>
+              <option value="0.7" selected>70% 訓練 / 30% 驗證</option>
+              <option value="0.8">80% 訓練 / 20% 驗證</option>
+              <option value="0.6">60% 訓練 / 40% 驗證</option>
             </select>
           </label>
           <span class="block-note" id="opt-note">以目前資產 / 週期 / 區間回測</span>
