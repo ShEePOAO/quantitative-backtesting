@@ -892,7 +892,6 @@ function renderEquity(r) {
       });
     });
     traces.push({ x: bh.x, y: to100(r.buy_hold), name: "等權買入持有", type: "scatter", mode: "lines", line: { width: 1.8, color: cssv("--chart-bh"), dash: "dash" }, hovertemplate: "%{y:.1f}<extra>買入持有</extra>" });
-    if (ghost && ghost.equity) { const g = seriesXY(ghost.equity); traces.push({ x: g.x, y: to100(ghost.equity), name: "上次回測", type: "scatter", mode: "lines", line: { width: 1.2, color: cssv("--chart-font"), dash: "dot" }, opacity: 0.5, hovertemplate: "%{y:.1f}<extra>上次</extra>" }); }
     state.pins.filter((p) => p.mode === "multi").forEach((p) => {
       traces.push({ x: p.equity.t, y: to100(p.equity), name: p.label, type: "scatter", mode: "lines", line: { width: 1.2, color: p.color, dash: "dot" }, opacity: 0.85, hovertemplate: "%{y:.1f}<extra>" + p.label + "</extra>" });
     });
@@ -910,7 +909,6 @@ function renderEquity(r) {
     const st = seriesXY(r.hedge.stop_equity);
     traces.push({ x: st.x, y: st.y, name: "直接停損", type: "scatter", mode: "lines", line: { width: 1.4, color: cssv("--chart-stop"), dash: "dash" }, hovertemplate: "%{y:,.0f}<extra>直接停損</extra>" });
   }
-  if (ghost && ghost.equity) { const g = seriesXY(ghost.equity); traces.push({ x: g.x, y: g.y, name: "上次回測", type: "scatter", mode: "lines", line: { width: 1.2, color: cssv("--chart-font"), dash: "dot" }, opacity: 0.5, hovertemplate: "%{y:,.0f}<extra>上次</extra>" }); }
   state.pins.filter((p) => p.mode === "single").forEach((p) => {
     traces.push({ x: p.equity.t, y: p.equity.v, name: p.label, type: "scatter", mode: "lines", line: { width: 1.2, color: p.color, dash: "dot" }, opacity: 0.85, hovertemplate: "%{y:,.0f}<extra>" + p.label + "</extra>" });
   });
