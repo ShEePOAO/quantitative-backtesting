@@ -132,7 +132,7 @@ input:focus-visible, select:focus-visible { outline-offset: 0; }
   border-bottom: 1px solid var(--line);
   overflow: visible;
 }
-.mast-fx { position: absolute; inset: 0; opacity: .45; pointer-events: none; }
+.mast-fx { position: absolute; inset: 0; opacity: .5; pointer-events: none; }
 .masthead > .brand, .masthead > .runwrap { position: relative; z-index: 1; }
 .mast-fx canvas, .empty-fx canvas { display: block; width: 100% !important; height: 100% !important; }
 .brand { display: flex; align-items: center; gap: 8px; min-width: 0; }

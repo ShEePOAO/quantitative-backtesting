@@ -142,7 +142,7 @@ function initGalaxyFx() {
   if (window.Galaxy && typeof window.Galaxy.create === "function") {
     try {
       window.Galaxy.create("gradient", "#mast-fx", {
-        speed: 0.2, colors: ["#EEF1F3", "#E2E7EA", "#EBEEF0", "#EEF1F3"],
+        speed: 0.5, colors: ["#D6DBDF", "#BEC5CB", "#EFF2F4", "#C9CFD5"],
       });
     } catch (e) { /* optional */ }
   }
