@@ -12,6 +12,8 @@ data/import_csv/*
 !data/import_csv/2330_1h.csv
 !data/import_csv/0050.csv
 !data/import_csv/0050_1h.csv
+!data/import_csv/2330_1m.csv
+!data/import_csv/0050_1m.csv
 !data/import_csv/2317.csv
 !data/import_csv/2317_1h.csv
 !data/import_csv/2454.csv
