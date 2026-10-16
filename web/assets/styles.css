@@ -643,6 +643,7 @@ td.num, th.num { text-align: right; font-family: var(--mono); }
 .dual .track { position: absolute; left: 0; right: 0; top: 11px; height: 4px; border-radius: 2px; background: var(--line-strong); }
 .dual .fill { position: absolute; top: 11px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #3D4A5A, #2C4796); }
 .range-note { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); text-align: center; }
+.range-hint { font-size: 11px; color: var(--ink-3); text-align: center; margin-top: 2px; line-height: 1.4; }
 
 /* ---------- command palette ---------- */
 .palette { position: fixed; inset: 0; z-index: 100; background: rgba(16, 20, 26, .42); display: flex; align-items: flex-start; justify-content: center; padding-top: 13vh; }
@@ -821,6 +822,9 @@ input[type="range"].mix::-moz-range-thumb { border: 0; width: 15px; height: 15px
 }
 /* ---------- elastic checkbox (Uiverse "hadjer_1061", recolored) ---------- */
 .elastic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px 8px; margin: 6px 0 10px; max-height: 320px; overflow-y: auto; }
+.multi-search-wrap { display: block; position: relative; margin: 2px 0 4px; }
+.elastic-checkbox-label { animation: elastic-in .32s cubic-bezier(.2, .7, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 16ms); }
+@keyframes elastic-in { from { opacity: 0; transform: translateY(4px); } }
 .elastic-checkbox-label { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-family: var(--font); padding: 5px 8px; border-radius: 8px; border: 1px solid transparent; transition: background-color .15s ease, border-color .15s ease; }
 .elastic-checkbox-label:hover { background: var(--surface-2); }
 .elastic-checkbox-label:has(.elastic-input:checked) { background: var(--surface-2); border-color: var(--line); }

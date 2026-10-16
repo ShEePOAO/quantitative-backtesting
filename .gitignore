@@ -62,6 +62,8 @@ Thumbs.db
 .env
 *.env
 .streamlit/secrets.toml
+fugle_key.txt
+.fugle_key
 
 # Private (not for public repo)
 user_strategies/*.py

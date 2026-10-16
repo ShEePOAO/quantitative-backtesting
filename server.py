@@ -117,8 +117,11 @@ def optimize(body: OptBody):
 
 
 @app.get("/api/avail")
-def avail(symbol: str, source: str = "csv"):
-    return {"symbol": symbol, "source": source, "intervals": engine.availability_payload(symbol, source)}
+def avail(symbol: str, source: str = "csv", interval: str = ""):
+    out = {"symbol": symbol, "source": source, "intervals": engine.availability_payload(symbol, source)}
+    if interval:
+        out["range"] = engine.data_bounds(symbol, interval, source)
+    return out
 
 
 @app.post("/api/update")

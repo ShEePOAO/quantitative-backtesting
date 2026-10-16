@@ -43,6 +43,7 @@
     "初始資金 (USDT)": "Initial capital (USDT)",
     "強制刷新數據（清除快取重新下載）": "Force refresh data (clear cache and redownload)",
     "搜尋資產…": "Search asset…",
+    "搜尋標的…": "Search symbols…",
     "多標的資產選擇": "Multi-asset selection",
     "選擇資產（建議 ≥ 3）": "Select assets (recommend ≥ 3)",
     "多標的權重（對應上面順序；留空＝等權）": "Weights (match order above; blank = equal)",

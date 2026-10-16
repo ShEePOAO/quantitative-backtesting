@@ -118,6 +118,11 @@
 
       <div id="multi-block" hidden>
         <span class="field-label">選擇資產（建議 ≥ 3）</span>
+        <span class="fxline multi-search-wrap">
+          <input id="multi-search" class="multi-search" type="text" autocomplete="off" spellcheck="false" placeholder="搜尋標的…">
+          <span class="topline" aria-hidden="true"></span>
+          <span class="underline" aria-hidden="true"></span>
+        </span>
         <div id="symbol-checks" class="elastic-list" role="group" aria-label="多標的資產選擇"></div>
         <label class="field stacked">
           <span class="field-label">多標的權重（對應上面順序；留空＝等權）</span>
@@ -148,6 +153,7 @@
           <input type="range" id="rg-end" min="0" max="1" value="1" aria-label="結束日期">
         </div>
         <div class="range-note" id="range-note"></div>
+        <div class="range-hint" id="range-hint" hidden></div>
         <input type="hidden" name="start" id="start">
         <input type="hidden" name="end" id="end">
       </div>

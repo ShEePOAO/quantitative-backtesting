@@ -212,6 +212,18 @@ def availability_payload(symbol, source="csv"):
     return {iv: bool(interval_available(symbol, iv, source)) for iv in INTERVALS}
 
 
+def data_bounds(symbol, interval, source="csv"):
+    try:
+        df = load_df(symbol, interval, None, None, False, source)
+    except Exception:
+        return None
+    if df is None or len(df) == 0:
+        return None
+    return {"start": df.index[0].strftime("%Y-%m-%d"),
+            "end": df.index[-1].strftime("%Y-%m-%d"),
+            "rows": int(len(df))}
+
+
 def load_df(symbol, interval, start, end, refresh, source):
     key = (symbol, interval, str(start), str(end), source)
     if not refresh and key in _DF_CACHE:

@@ -224,10 +224,22 @@ function populateAssets() {
       updateContext();
     });
     checks.appendChild(label);
+    label.style.setProperty("--i", checks.childElementCount - 1);
   }
   if (avail.includes(prev)) single.value = prev; else if (avail.length) single.value = avail[0];
   single.dispatchEvent(new Event("change"));
   document.dispatchEvent(new Event("qs-assets"));
+  filterMulti();
+}
+function filterMulti() {
+  const inp = $("#multi-search");
+  if (!inp) return;
+  const q = inp.value.trim().toLowerCase();
+  document.querySelectorAll("#symbol-checks .elastic-checkbox-label").forEach((lb) => {
+    const sym = (lb.querySelector(".elastic-text") || {}).textContent || "";
+    const lbl = lb.getAttribute("title") || "";
+    lb.style.display = (!q || sym.toLowerCase().includes(q) || lbl.toLowerCase().includes(q)) ? "" : "none";
+  });
 }
 function populateIntervals() {
   const sel = $("#interval");
@@ -248,6 +260,7 @@ function bindEvents() {
   $("#run-btn").addEventListener("click", run);
   $("#use-sltp").addEventListener("change", () => { $("#sltp-row").hidden = !$("#use-sltp").checked; });
   $("#pm_mode").addEventListener("change", () => { $("#pm-fields").hidden = $("#pm_mode").value === "fixed"; });
+  $("#multi-search").addEventListener("input", filterMulti);
   $("#load-btn").addEventListener("click", loadStrategy);
   $("#save-btn").addEventListener("click", saveStrategy);
   $("#delete-btn").addEventListener("click", deleteStrategy);
@@ -330,11 +343,15 @@ function setView(view) {
   requestAnimationFrame(updateSubnavInd);
   window.dispatchEvent(new Event("resize"));
 }
-const RANGE_MIN = new Date(2013, 0, 1);
+const RANGE_MIN = new Date(2000, 0, 1);
 let RANGE_MAX = 1;
 function _today() { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
 function _dayIndex(d) { return Math.round((d - RANGE_MIN) / 86400000); }
-function _isoFromIndex(i) { return new Date(RANGE_MIN.getTime() + i * 86400000).toISOString().slice(0, 10); }
+function _isoFromIndex(i) {
+  const d = new Date(RANGE_MIN.getTime() + i * 86400000);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 function setRangeByIndex(i0, i1) {
   i0 = Math.max(0, Math.min(i0, RANGE_MAX));
   i1 = Math.max(0, Math.min(i1, RANGE_MAX));
@@ -351,7 +368,12 @@ function applyPreset() {
   if (preset === "自訂") return;
   const end = _dayIndex(_today());
   let start = 0;
-  if (preset !== "全部") {
+  if (preset === "全部") {
+    if (state.dataRange && state.dataRange.start) {
+      const [yy, mm, dd] = state.dataRange.start.split("-").map(Number);
+      start = Math.max(0, _dayIndex(new Date(yy, mm - 1, dd)));
+    }
+  } else {
     const years = { "近 1 年": 1, "近 2 年": 2, "近 3 年": 3, "近 5 年": 5, "近 10 年": 10 };
     const d = _today(); d.setFullYear(d.getFullYear() - (years[preset] || 3));
     start = _dayIndex(d);
@@ -390,16 +412,27 @@ function updateContext() {
 let availSeq = 0;
 async function checkIntervalAvail() {
   const note = $("#interval-note");
+  const hint = $("#range-hint");
+  const hideHint = () => { if (hint) { hint.hidden = true; hint.textContent = ""; } state.dataRange = null; };
   if (!note) return;
-  if (state.mode !== "single" || $("#source").value === "binance") { note.hidden = true; note.textContent = ""; return; }
+  if (state.mode !== "single" || $("#source").value === "binance") { note.hidden = true; note.textContent = ""; hideHint(); return; }
   const iv = $("#interval").value, symbol = $("#symbol").value;
   const seq = ++availSeq;
   try {
-    const data = await api(`/api/avail?symbol=${encodeURIComponent(symbol)}&source=csv`);
+    const data = await api(`/api/avail?symbol=${encodeURIComponent(symbol)}&source=csv&interval=${encodeURIComponent(iv)}`);
     if (seq !== availSeq || state.mode !== "single" || $("#interval").value !== iv) return;
     if (data.intervals && data.intervals[iv]) { note.hidden = true; note.textContent = ""; }
     else { note.textContent = "此週期沒有本地歷史資料，回測可能失敗；請改選其他週期、上傳 CSV，或改用 Binance 資料來源。"; note.hidden = false; }
-  } catch (e) { note.hidden = true; }
+    if (data.range && hint) {
+      const prev = state.dataRange;
+      state.dataRange = data.range;
+      const ivLabel = (state.meta.intervals.find((x) => x.value === iv) || {}).label || iv;
+      hint.textContent = `資料範圍：${data.range.start} ~ ${data.range.end}（${ivLabel} · ${Number(data.range.rows).toLocaleString()} 根）`;
+      hint.hidden = false;
+      const changed = !prev || prev.start !== data.range.start || prev.end !== data.range.end;
+      if ($("#preset").value === "全部" && changed) applyPreset();
+    } else { hideHint(); }
+  } catch (e) { note.hidden = true; hideHint(); }
 }
 
 /* ---------- params ---------- */

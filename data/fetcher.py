@@ -42,9 +42,10 @@ _IV_RANK = {"5m": 0, "15m": 1, "30m": 2, "1h": 3, "4h": 4, "6h": 5, "12h": 6, "1
 
 
 def _native_rank(symbol):
-    for d in IMPORT_DIRS:
-        if os.path.exists(os.path.join(d, f"{symbol}_1h.csv")):
-            return _IV_RANK["1h"]
+    for suffix, iv in (("_1m", "5m"), ("_5m", "5m"), ("_1h", "1h")):
+        for d in IMPORT_DIRS:
+            if os.path.exists(os.path.join(d, f"{symbol}{suffix}.csv")):
+                return _IV_RANK[iv]
     for d in IMPORT_DIRS:
         if os.path.exists(os.path.join(d, f"{symbol}.csv")):
             return _IV_RANK["1d"] if symbol in STOCK_SYMBOLS else _IV_RANK["5m"]
@@ -194,11 +195,13 @@ SUBDaily_INTERVALS = {"5m", "15m", "30m", "1h", "4h", "6h", "12h"}
 
 
 def _import_path(symbol, interval=None):
+    if interval in SUBDaily_INTERVALS:
+        for suffix in ("_1m", "_5m", "_1h"):
+            for d in IMPORT_DIRS:
+                p = os.path.join(d, f"{symbol}{suffix}.csv")
+                if os.path.exists(p):
+                    return p
     for d in IMPORT_DIRS:
-        if interval in SUBDaily_INTERVALS:
-            p = os.path.join(d, f"{symbol}_1h.csv")
-            if os.path.exists(p):
-                return p
         p = os.path.join(d, f"{symbol}.csv")
         if os.path.exists(p):
             return p
