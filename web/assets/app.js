@@ -410,28 +410,46 @@ function updateContext() {
   checkIntervalAvail();
 }
 let availSeq = 0;
+function applyDataRange(range, ivLabel, hint, hideHint, multi) {
+  if (!range || !hint) { hideHint(); return; }
+  const prev = state.dataRange;
+  state.dataRange = { start: range.start, end: range.end };
+  hint.textContent = `資料範圍：${range.start} ~ ${range.end}（${ivLabel}${multi ? " · 多檔" : ""} · ${Number(range.rows).toLocaleString()} 根）`;
+  hint.hidden = false;
+  const changed = !prev || prev.start !== range.start || prev.end !== range.end;
+  if ($("#preset").value === "全部" && changed) applyPreset();
+}
 async function checkIntervalAvail() {
   const note = $("#interval-note");
   const hint = $("#range-hint");
   const hideHint = () => { if (hint) { hint.hidden = true; hint.textContent = ""; } state.dataRange = null; };
   if (!note) return;
-  if (state.mode !== "single" || $("#source").value === "binance") { note.hidden = true; note.textContent = ""; hideHint(); return; }
-  const iv = $("#interval").value, symbol = $("#symbol").value;
+  if ($("#source").value === "binance") { note.hidden = true; note.textContent = ""; hideHint(); return; }
+  const iv = $("#interval").value;
+  const ivLabel = (state.meta.intervals.find((x) => x.value === iv) || {}).label || iv;
   const seq = ++availSeq;
   try {
-    const data = await api(`/api/avail?symbol=${encodeURIComponent(symbol)}&source=csv&interval=${encodeURIComponent(iv)}`);
-    if (seq !== availSeq || state.mode !== "single" || $("#interval").value !== iv) return;
-    if (data.intervals && data.intervals[iv]) { note.hidden = true; note.textContent = ""; }
-    else { note.textContent = "此週期沒有本地歷史資料，回測可能失敗；請改選其他週期、上傳 CSV，或改用 Binance 資料來源。"; note.hidden = false; }
-    if (data.range && hint) {
-      const prev = state.dataRange;
-      state.dataRange = data.range;
-      const ivLabel = (state.meta.intervals.find((x) => x.value === iv) || {}).label || iv;
-      hint.textContent = `資料範圍：${data.range.start} ~ ${data.range.end}（${ivLabel} · ${Number(data.range.rows).toLocaleString()} 根）`;
-      hint.hidden = false;
-      const changed = !prev || prev.start !== data.range.start || prev.end !== data.range.end;
-      if ($("#preset").value === "全部" && changed) applyPreset();
-    } else { hideHint(); }
+    if (state.mode === "single") {
+      const symbol = $("#symbol").value;
+      const data = await api(`/api/avail?symbol=${encodeURIComponent(symbol)}&source=csv&interval=${encodeURIComponent(iv)}`);
+      if (seq !== availSeq || state.mode !== "single" || $("#interval").value !== iv) return;
+      if (data.intervals && data.intervals[iv]) { note.hidden = true; note.textContent = ""; }
+      else { note.textContent = "此週期沒有本地歷史資料，回測可能失敗；請改選其他週期、上傳 CSV，或改用 Binance 資料來源。"; note.hidden = false; }
+      applyDataRange(data.range, ivLabel, hint, hideHint, false);
+    } else {
+      note.hidden = true; note.textContent = "";
+      const syms = Array.from(state.selected);
+      if (!syms.length) { hideHint(); return; }
+      const results = await Promise.all(syms.map((s) =>
+        api(`/api/avail?symbol=${encodeURIComponent(s)}&source=csv&interval=${encodeURIComponent(iv)}`).catch(() => null)));
+      if (seq !== availSeq || state.mode !== "multi" || $("#interval").value !== iv) return;
+      const ranges = results.filter((r) => r && r.range).map((r) => r.range);
+      if (!ranges.length) { hideHint(); return; }
+      const start = ranges.map((r) => r.start).sort()[0];
+      const end = ranges.map((r) => r.end).sort().slice(-1)[0];
+      const rows = ranges.reduce((a, r) => a + r.rows, 0);
+      applyDataRange({ start, end, rows }, ivLabel, hint, hideHint, true);
+    }
   } catch (e) { note.hidden = true; hideHint(); }
 }
 
